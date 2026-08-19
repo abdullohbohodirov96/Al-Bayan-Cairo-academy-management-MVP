@@ -1,0 +1,56 @@
+:root{
+  /* ink & paper */
+  --ink:#16241F;
+  --ink-soft:#4B5850;
+  --ink-faint:#7C877F;
+  --paper:#F2ECDA;
+  --surface:#FCFAF2;
+  --surface-2:#EAE2C8;
+  --line:rgba(22,36,31,.13);
+  --line-strong:rgba(22,36,31,.22);
+
+  /* brand */
+  --emerald:#1E6F5C;
+  --emerald-deep:#0F3F34;
+  --emerald-soft:#DCEAE1;
+  --brass:#A9793A;
+  --brass-soft:#F1E2C3;
+  --brick:#AE3B2C;
+  --brick-soft:#F6DDD8;
+
+  /* sidebar (dark plane) */
+  --ink-950:#0F1913;
+  --ink-900:#16241F;
+  --ink-800:#20322B;
+  --ink-line:rgba(255,255,255,.09);
+  --ink-text:#EDEFE8;
+  --ink-text-soft:rgba(237,239,232,.6);
+
+  /* type */
+  --font-display:'Unbounded','Manrope',system-ui,sans-serif;
+  --font-body:'Manrope','Segoe UI',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SFMono-Regular',monospace;
+  --font-arabic:'Cairo','Manrope',system-ui,sans-serif;
+
+  /* shape */
+  --r-sm:8px;
+  --r-md:14px;
+  --r-lg:20px;
+  --r-full:999px;
+
+  /* elevation */
+  --shadow-sm:0 1px 2px rgba(22,36,31,.07);
+  --shadow-md:0 10px 28px -14px rgba(22,36,31,.32);
+  --shadow-lg:0 24px 48px -20px rgba(22,36,31,.38);
+
+  /* layout */
+  --sidebar-w:248px;
+  --sidebar-w-rail:76px;
+  --topbar-h:64px;
+  --mobilenav-h:64px;
+}
+
+[data-locale="ar"]{
+  --font-display:'Cairo','Manrope',system-ui,sans-serif;
+  --font-body:'Cairo','Manrope',system-ui,sans-serif;
+}

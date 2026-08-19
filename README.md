@@ -2,41 +2,55 @@
 
 Lightweight management MVP for an Arabic/language education center.
 
-## Why this version
-Version 0.2 was rebuilt after benchmarking tutoring/language-school products such as TutorCruncher, Teachworks, Teach 'n Go, Classcard, TutorBird and Classpro. The goal is to keep the strongest operating workflows while keeping the frontend light.
-
-See `docs/COMPETITOR_AUDIT.md` for the feature benchmark.
+## Version 0.3 — full frontend rebuild
+The screen was rebuilt from a single 40 KB file into a proper component
+architecture, with a distinct visual identity (not a generic template),
+and full responsive support for desktop and mobile. The stale "competitor
+benchmark" tab was removed from daily navigation — that comparison lives
+in `docs/COMPETITOR_AUDIT.md` for reference, not in the working app.
 
 ## Stack
 - React + Vite
-- plain CSS (no heavy component framework)
+- Plain CSS, split into tokens / base / layout / components / pages (no heavy UI framework)
 - Lucide icons
+- Fonts: Unbounded (display) + Manrope (body, Cyrillic/Latin) + JetBrains Mono (IDs, amounts, dates) + Cairo (Arabic locale)
 - Supabase Postgres + Auth + RLS foundation
 - Supabase Edge Function foundation for SMS reminders
-- Vercel-ready frontend
+- Vercel-ready
+
+## Design direction
+Geometric/Kufic-inspired identity tied to an Arabic-language academy in Cairo:
+deep emerald-black + sand parchment + a brass accent for money, with a single
+signature motif — an eight-point geometric rosette (khatam) — used only in the
+logo mark. Avoids the generic "cream + terracotta" AI-template look.
+
+## Structure
+```
+src/
+  App.jsx            – state, routing, layout composition
+  main.jsx            – entry point
+  i18n.js / search.js / data.js / utils.js
+  components/          – Sidebar, Topbar, MobileNav, SearchBox, UI primitives, modals
+  pages/                – one file per screen (Overview, Students, Payments, …)
+  styles/               – tokens.css, base.css, layout.css, components.css, pages.css
+```
 
 ## MVP modules
-- Overview / CEO dashboard
-- Student CRM
-- Global prefix autocomplete search
-- Payments and debt control
-- Groups and levels
-- Teachers and workload
-- Attendance marking
-- Schedule
-- Leads / admissions pipeline
-- Payment reminder automation UI
-- SMS queue/log foundation
-- Analytics
-- Competitor benchmark
-- Roles foundation: CEO / Admin / Teacher / Student (future portal)
-- RU / UZ / AR interface shell, RTL-ready
-- Audit-log foundation
+Overview / CEO dashboard · Student CRM · Global prefix autocomplete search ·
+Payments and debt control · Groups and levels · Teachers and workload ·
+Attendance marking · Schedule · Leads / admissions pipeline · Payment reminder
+automation UI · SMS queue/log foundation · Analytics · Roles foundation
+(CEO / Admin / Teacher) · RU / UZ / AR interface, RTL-ready · Audit-log foundation.
+
+## Responsive layout
+- **Desktop (≥1080px):** fixed sidebar (collapsible to an icon rail), top bar with global search.
+- **Tablet (720–1079px):** sidebar auto-collapses to an icon rail.
+- **Mobile (<760px):** sidebar becomes an off-canvas drawer, bottom tab bar
+  for the four most-used sections plus "Ещё" for the rest, full-width cards.
 
 ## Smart search
-Search suggestions combine students, teachers, groups and leads.
-
-It is intentionally prefix-based:
+Search suggestions combine students, teachers, groups and leads. It is
+intentionally prefix-based:
 - `A` → names/items starting with A
 - `ABD` → `Abdulloh`, `Abdurahmon`, etc.
 - `АБД` → transliterated to `abd`, so Cyrillic keyboard input can find Latin student names
@@ -45,7 +59,9 @@ It is intentionally prefix-based:
 The pure search logic is in `src/search.js` and covered by Node tests.
 
 ## SMS reminders
-The UI includes reminder rules, a message preview and a queue/log screen. The database migration adds an idempotent `notification_jobs` queue and templates. `supabase/functions/process-reminders` is a server-only provider adapter.
+The UI includes reminder rules, a message preview and a queue/log screen. The
+database migration adds an idempotent `notification_jobs` queue and templates.
+`supabase/functions/process-reminders` is a server-only provider adapter.
 
 **Never put SMS provider secrets in `VITE_*` environment variables.**
 
@@ -73,7 +89,14 @@ npm run build
 ```
 
 ## Vercel
-Import this GitHub repository into Vercel. When real Supabase data wiring is added, configure the public project URL/publishable key. Keep service-role and SMS provider keys only in server-side/Edge Function secrets.
+Import this GitHub repository into Vercel. Framework preset: Vite. No
+environment variables are required for the current demo-data build. When real
+Supabase data wiring is added, configure only the public project URL/anon key
+as `VITE_*` values — keep service-role and SMS provider keys in server-side
+Edge Function secrets only.
 
 ## Current scope boundary
-The current React screen uses demo data so the product UX can be evaluated immediately. SQL/RLS/reminder infrastructure is included, but real CRUD/auth/provider credentials still need to be connected to the frontend before production use.
+The current React screen uses demo data so the product UX can be evaluated
+immediately. SQL/RLS/reminder infrastructure is included, but real CRUD/auth/
+provider credentials still need to be connected to the frontend before
+production use.
