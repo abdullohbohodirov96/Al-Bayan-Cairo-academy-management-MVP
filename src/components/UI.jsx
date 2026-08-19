@@ -5,11 +5,10 @@ export function Avatar({ s, size = '' }) {
   return <div className={'avatar ' + size}>{s.avatar || initials(s.name)}</div>;
 }
 
-export function PageHead({ eyebrow, title, sub, children }) {
+export function PageHead({ title, sub, children }) {
   return (
     <div className="pagehead">
       <div>
-        <div className="eyebrow">{eyebrow}</div>
         <h1>{title}</h1>
         {sub && <p>{sub}</p>}
       </div>

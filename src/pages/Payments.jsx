@@ -11,7 +11,7 @@ export function Payments({ students, togglePay, sendReminder }) {
 
   return (
     <section className="content">
-      <PageHead eyebrow="BILLING" title="Оплаты" sub="Ежемесячные начисления, частичные оплаты и напоминания" />
+      <PageHead title="Оплаты" sub="Ежемесячные начисления, частичные оплаты и напоминания" />
 
       <div className="statgrid">
         <StatCard icon={WalletCards} value={money(collected)} label="Собрано по выборке" />

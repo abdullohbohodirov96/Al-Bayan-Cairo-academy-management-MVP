@@ -6,7 +6,7 @@ export function Schedule({ lessons }) {
   const dates = [...new Set(lessons.map(x => x.date))];
   return (
     <section className="content">
-      <PageHead eyebrow="CALENDAR" title="Расписание" sub="Уроки, аудитории и конфликты">
+      <PageHead title="Расписание" sub="Уроки, аудитории и конфликты">
         <button className="btn btn-primary"><Plus size={16} /> Новый урок</button>
       </PageHead>
       <div className="card">

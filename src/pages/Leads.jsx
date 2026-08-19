@@ -15,7 +15,7 @@ export function Leads({ leads, setLeads }) {
   }
   return (
     <section className="content">
-      <PageHead eyebrow="ADMISSIONS CRM" title="Лиды и набор" sub="От заявки до записи в группу">
+      <PageHead title="Лиды и набор" sub="От заявки до записи в группу">
         <button className="btn btn-primary"><Plus size={16} /> Новый лид</button>
       </PageHead>
       <div className="pipeline">

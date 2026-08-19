@@ -4,7 +4,7 @@ import { PageHead, Avatar } from '../components/UI.jsx';
 export function SettingsPage({ account, locale, setLocale, onLogout }) {
   return (
     <section className="content">
-      <PageHead eyebrow="SYSTEM" title="Настройки" sub="Аккаунт, язык интерфейса и интеграции" />
+      <PageHead title="Настройки" sub="Аккаунт, язык интерфейса и интеграции" />
       <div className="settingsgrid">
         <div className="card">
           <div className="cardhead"><div><h3>Организация</h3><p>Базовые параметры центра</p></div><Building2 size={17} /></div>

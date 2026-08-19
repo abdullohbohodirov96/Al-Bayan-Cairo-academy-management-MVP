@@ -12,7 +12,7 @@ export function Attendance({ students }) {
 
   return (
     <section className="content">
-      <PageHead eyebrow="ATTENDANCE" title="Посещаемость" sub="Отметка за урок — без отдельной тяжёлой LMS">
+      <PageHead title="Посещаемость" sub="Отметка за урок — без отдельной тяжёлой LMS">
         <div className="datebadge"><CalendarDays size={15} /> 19 августа 2026</div>
       </PageHead>
       <div className="attendance-layout">

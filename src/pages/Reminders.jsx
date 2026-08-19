@@ -15,7 +15,7 @@ export function Reminders({ students, rules, setRules, messageLog, sendReminder 
 
   return (
     <section className="content">
-      <PageHead eyebrow="AUTOMATION" title="Напоминания и SMS" sub="Правила, очередь, шаблоны и журнал отправки">
+      <PageHead title="Напоминания и SMS" sub="Правила, очередь, шаблоны и журнал отправки">
         <span className="provider"><span /> Провайдер не подключён</span>
       </PageHead>
       <div className="remindergrid">

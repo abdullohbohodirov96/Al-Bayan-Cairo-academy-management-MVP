@@ -4,7 +4,7 @@ import { PageHead, Progress } from '../components/UI.jsx';
 export function Groups({ groups }) {
   return (
     <section className="content">
-      <PageHead eyebrow="ACADEMIC STRUCTURE" title="Группы и уровни" sub="Нагрузка, вместимость, преподаватели и аудитории">
+      <PageHead title="Группы и уровни" sub="Нагрузка, вместимость, преподаватели и аудитории">
         <button className="btn btn-primary"><Plus size={16} /> Новая группа</button>
       </PageHead>
       <div className="cardgrid">
@@ -34,7 +34,7 @@ export function Groups({ groups }) {
 export function Teachers({ teachers }) {
   return (
     <section className="content">
-      <PageHead eyebrow="TEAM" title="Преподаватели" sub="Группы, нагрузка, специализация и контакты">
+      <PageHead title="Преподаватели" sub="Группы, нагрузка, специализация и контакты">
         <button className="btn btn-primary"><Plus size={16} /> Добавить преподавателя</button>
       </PageHead>
       <div className="cardgrid">

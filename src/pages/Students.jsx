@@ -16,7 +16,7 @@ export function Students({ students, query, setModal, setSelected, togglePay, se
 
   return (
     <section className="content">
-      <PageHead eyebrow="STUDENT CRM" title="Ученики" sub={canManage ? 'Карточки, группы, оплаты, посещаемость и контакты' : 'Ваши группы: карточки и посещаемость'}>
+      <PageHead title="Ученики" sub={canManage ? 'Карточки, группы, оплаты, посещаемость и контакты' : 'Ваши группы: карточки и посещаемость'}>
         {canManage && <button className="btn btn-primary" onClick={() => setModal('add')}><Plus size={16} /> Добавить ученика</button>}
       </PageHead>
 
