@@ -2,17 +2,17 @@ import {
   LayoutDashboard, Users, WalletCards, Layers, GraduationCap, UserCheck,
   CalendarClock, Target, BellRing, BarChart3, Settings, PanelLeftClose, PanelLeftOpen,
 } from 'lucide-react';
-import { Rosette } from './Rosette.jsx';
+import { LogoMark } from './LogoMark.jsx';
 import { tr } from '../i18n.js';
 
 const groups = [
-  { label: 'Работа', items: [
+  { labelKey: 'navWork', items: [
     ['overview', LayoutDashboard], ['students', Users], ['payments', WalletCards],
   ]},
-  { label: 'Учебный процесс', items: [
+  { labelKey: 'navStudy', items: [
     ['groups', Layers], ['teachers', GraduationCap], ['attendance', UserCheck], ['schedule', CalendarClock],
   ]},
-  { label: 'Рост', items: [
+  { labelKey: 'navGrowth', items: [
     ['leads', Target], ['reminders', BellRing], ['analytics', BarChart3],
   ]},
 ];
@@ -25,7 +25,7 @@ export function Sidebar({ page, setPage, locale, allowedPages, railMode, setRail
     <>
       <aside className={'sidebar' + (mobileOpen ? ' open' : '')}>
         <div className="brand">
-          <Rosette className="brandmark" />
+          <LogoMark className="brandmark" />
           <div className="brandtext">
             <b>Аль-Баян</b>
             <span>Academy OS</span>
@@ -33,8 +33,8 @@ export function Sidebar({ page, setPage, locale, allowedPages, railMode, setRail
         </div>
         <nav className="nav">
           {visibleGroups.map(g => (
-            <div key={g.label}>
-              <div className="navlabel">{g.label}</div>
+            <div key={g.labelKey}>
+              <div className="navlabel">{tr(locale, g.labelKey)}</div>
               {g.items.map(([key, Icon]) => (
                 <button
                   key={key}
@@ -49,7 +49,7 @@ export function Sidebar({ page, setPage, locale, allowedPages, railMode, setRail
           ))}
           {allowedPages.includes('settings') && (
             <>
-              <div className="navlabel">Система</div>
+              <div className="navlabel">{tr(locale, 'navSystem')}</div>
               <button className={'navitem' + (page === 'settings' ? ' active' : '')} onClick={() => { setPage('settings'); setMobileOpen(false); }}>
                 <Settings size={18} />
                 <span>{tr(locale, 'settings')}</span>
@@ -60,7 +60,7 @@ export function Sidebar({ page, setPage, locale, allowedPages, railMode, setRail
         <div className="sidebarfoot">
           <button className="railtoggle" onClick={() => setRailMode(v => !v)}>
             {railMode ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-            <span>Свернуть меню</span>
+            <span>{tr(locale, 'collapseMenu')}</span>
           </button>
         </div>
       </aside>

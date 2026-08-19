@@ -177,3 +177,8 @@
 /* Password show/hide toggle on login */
 .pwdtoggle{position:absolute;inset-inline-end:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--ink-faint);cursor:pointer;padding:4px;display:flex}
 .pwdtoggle:hover{color:var(--ink-soft)}
+
+/* Logo image (replaces the old geometric rosette mark) */
+.logomark{display:block;object-fit:cover;border-radius:22%;flex:none}
+.loginlang{position:absolute;top:18px;inset-inline-end:18px}
+.logincard{position:relative}

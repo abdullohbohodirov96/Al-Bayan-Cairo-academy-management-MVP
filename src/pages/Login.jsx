@@ -1,10 +1,20 @@
 import { useState } from 'react';
 import { LogIn, ShieldCheck, AlertCircle, Eye, EyeOff } from 'lucide-react';
-import { Rosette } from '../components/Rosette.jsx';
+import { LogoMark } from '../components/LogoMark.jsx';
 import { accounts } from '../roles.js';
 import { supabase, supabaseEnabled } from '../supabaseClient.js';
+import { tr, localeNames } from '../i18n.js';
 
-function DemoLogin({ onLogin }) {
+function LangPicker({ locale, setLocale }) {
+  if (!setLocale) return null;
+  return (
+    <select className="langswitch loginlang" value={locale} onChange={e => setLocale(e.target.value)} aria-label={tr(locale, 'language')}>
+      {Object.entries(localeNames).map(([code, label]) => <option key={code} value={code}>{label}</option>)}
+    </select>
+  );
+}
+
+function DemoLogin({ onLogin, locale, setLocale }) {
   const [picked, setPicked] = useState(accounts[0].id);
   function submit(e) {
     e.preventDefault();
@@ -12,9 +22,10 @@ function DemoLogin({ onLogin }) {
   }
   return (
     <form className="logincard" onSubmit={submit}>
-      <Rosette className="loginmark" />
+      <LangPicker locale={locale} setLocale={setLocale} />
+      <LogoMark className="loginmark" />
       <h1>Аль-Баян</h1>
-      <p>Academy OS · тизимга киришни танланг (демо)</p>
+      <p>{tr(locale, 'loginSubtitleDemo')}</p>
       <div className="loginlist">
         {accounts.map(a => (
           <label key={a.id} className={'loginrow' + (picked === a.id ? ' active' : '')}>
@@ -29,14 +40,14 @@ function DemoLogin({ onLogin }) {
         ))}
       </div>
       <button type="submit" className="btn btn-primary btn-full">
-        <LogIn size={16} /> Кириш
+        <LogIn size={16} /> {tr(locale, 'login')}
       </button>
-      <div className="loginfoot"><ShieldCheck size={13} /> Ҳар бир роль фақат ўзига керакли бўлимларни кўради</div>
+      <div className="loginfoot"><ShieldCheck size={13} /> {tr(locale, 'roleNote')}</div>
     </form>
   );
 }
 
-function SupabaseLogin() {
+function SupabaseLogin({ locale, setLocale }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -51,24 +62,25 @@ function SupabaseLogin() {
     setLoading(false);
     if (authError) {
       // Show Supabase's actual reason (wrong password vs unconfirmed email vs
-      // rate-limited, etc.) instead of a single generic message — makes it
-      // possible to tell these apart while setting accounts up.
-      setError(authError.message || 'Email ёки пароль нотўғри');
+      // rate-limited, network issue, etc.) instead of one generic message —
+      // makes it possible to tell these apart while setting accounts up.
+      setError(authError.message || tr(locale, 'genericAuthError'));
     }
     // On success, App.jsx's onAuthStateChange listener picks up the session.
   }
 
   return (
     <form className="logincard" onSubmit={submit}>
-      <Rosette className="loginmark" />
+      <LangPicker locale={locale} setLocale={setLocale} />
+      <LogoMark className="loginmark" />
       <h1>Аль-Баян</h1>
-      <p>Academy OS · тизимга киринг</p>
+      <p>{tr(locale, 'loginSubtitle')}</p>
 
       <div className="loginlist" style={{ gap: 10 }}>
-        <label className="field">Email
+        <label className="field">{tr(locale, 'email')}
           <input type="email" required autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} placeholder="ceo@albayan.uz" />
         </label>
-        <label className="field">Пароль
+        <label className="field">{tr(locale, 'password')}
           <div style={{ position: 'relative' }}>
             <input
               type={showPassword ? 'text' : 'password'}
@@ -78,7 +90,7 @@ function SupabaseLogin() {
             />
             <button
               type="button" onClick={() => setShowPassword(v => !v)}
-              className="pwdtoggle" aria-label={showPassword ? 'Паролни яшириш' : 'Паролни кўрсатиш'}
+              className="pwdtoggle" aria-label={showPassword ? tr(locale, 'hidePassword') : tr(locale, 'showPassword')}
             >
               {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
@@ -93,17 +105,17 @@ function SupabaseLogin() {
       )}
 
       <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
-        <LogIn size={16} /> {loading ? 'Текширилмоқда…' : 'Кириш'}
+        <LogIn size={16} /> {loading ? tr(locale, 'loggingIn') : tr(locale, 'login')}
       </button>
-      <div className="loginfoot"><ShieldCheck size={13} /> Ҳар бир роль фақат ўзига керакли бўлимларни кўради</div>
+      <div className="loginfoot"><ShieldCheck size={13} /> {tr(locale, 'roleNote')}</div>
     </form>
   );
 }
 
-export function Login({ onLogin }) {
+export function Login({ onLogin, locale = 'uz', setLocale }) {
   return (
     <div className="loginwrap">
-      {supabaseEnabled ? <SupabaseLogin /> : <DemoLogin onLogin={onLogin} />}
+      {supabaseEnabled ? <SupabaseLogin locale={locale} setLocale={setLocale} /> : <DemoLogin onLogin={onLogin} locale={locale} setLocale={setLocale} />}
     </div>
   );
 }

@@ -33,7 +33,7 @@ export default function App() {
   const [account, setAccount] = useState(null);
   const [authChecked, setAuthChecked] = useState(!supabaseEnabled);
   const [page, setPage] = useState('overview');
-  const [locale, setLocale] = useState('ru');
+  const [locale, setLocale] = useState('uz');
   const [railMode, setRailMode] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -222,7 +222,7 @@ export default function App() {
   }
 
   if (!account) {
-    return <Login onLogin={handleLogin} />;
+    return <Login onLogin={handleLogin} locale={locale} setLocale={setLocale} />;
   }
 
   const allowedPages = rolePages[account.role] || rolePages.teacher;
