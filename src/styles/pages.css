@@ -149,3 +149,24 @@
 .status.paid b{color:var(--emerald-deep)}
 .status.overdue b{color:var(--brick)}
 .status.overdue span{color:var(--brick)}
+
+/* Branch manager */
+.iconbtn.sm{width:30px;height:30px}
+.branchlist{display:flex;flex-direction:column;gap:8px;margin-bottom:4px}
+.branchrow{display:flex;align-items:center;gap:11px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--paper)}
+.branchicon{width:30px;height:30px;border-radius:8px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;color:var(--ink-soft);flex:none}
+.branchform{display:flex;flex-direction:column;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+
+/* Day picker (group schedule) */
+.daypicker{display:flex;gap:6px;flex-wrap:wrap}
+.daypicker button{padding:7px 11px;border-radius:var(--r-full);border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);font-size:12px;cursor:pointer;font-family:var(--font-mono)}
+.daypicker button.active{background:var(--emerald-deep);border-color:var(--emerald-deep);color:#fff}
+
+/* Attendance group picker */
+.groupswitch{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.groupswitch button{padding:8px 13px;border-radius:var(--r-full);border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);font-size:12.5px;cursor:pointer}
+.groupswitch button.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.emptynote{padding:30px 19px;text-align:center;color:var(--ink-faint);font-size:13px}
+
+/* Topbar language switcher */
+.langswitch{border:1px solid var(--line);border-radius:var(--r-full);background:var(--surface);color:var(--ink-soft);font-size:12px;padding:7px 10px;cursor:pointer}

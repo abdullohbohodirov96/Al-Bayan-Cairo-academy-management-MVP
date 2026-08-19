@@ -1,4 +1,4 @@
-export function AddStudentForm({ onSubmit }) {
+export function AddStudentForm({ onSubmit, branches = [] }) {
   return (
     <form id="add-student-form" onSubmit={onSubmit}>
       <div className="grid2">
@@ -29,8 +29,8 @@ export function AddStudentForm({ onSubmit }) {
           <input name="due" type="date" required defaultValue="2026-09-01" />
         </label>
         <label className="field">Филиал
-          <select name="branch" defaultValue="Cairo Main">
-            <option>Cairo Main</option><option>Nasr City</option>
+          <select name="branch" defaultValue={branches[0]?.name}>
+            {branches.map(b => <option key={b.id}>{b.name}</option>)}
           </select>
         </label>
       </div>

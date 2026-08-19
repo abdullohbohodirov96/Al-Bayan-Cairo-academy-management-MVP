@@ -1,11 +1,66 @@
-import { Plus, Building2, Phone } from 'lucide-react';
-import { PageHead, Progress } from '../components/UI.jsx';
+import { useState } from 'react';
+import { Plus, Building2, Phone, Pencil } from 'lucide-react';
+import { PageHead, Progress, Modal } from '../components/UI.jsx';
+import { tr, formatSchedule, weekDays } from '../i18n.js';
 
-export function Groups({ groups }) {
+function GroupForm({ initial, teachers, branches, locale, onSubmit, onCancel }) {
+  const [days, setDays] = useState(initial?.days || []);
+  function toggleDay(d) { setDays(v => v.includes(d) ? v.filter(x => x !== d) : [...v, d]); }
+  return (
+    <form onSubmit={e => { e.preventDefault(); const f = new FormData(e.currentTarget); onSubmit({ ...Object.fromEntries(f), days }); }}>
+      <div className="grid2">
+        <label className="field">{tr(locale, 'groupName')}
+          <input name="name" required defaultValue={initial?.name} placeholder="A1 — Weekend" />
+        </label>
+        <label className="field">{tr(locale, 'level')}
+          <select name="level" defaultValue={initial?.level || 'A1'}>
+            <option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option>
+          </select>
+        </label>
+        <label className="field">{tr(locale, 'teacher')}
+          <select name="teacher" defaultValue={initial?.teacher}>
+            {teachers.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
+          </select>
+        </label>
+        <label className="field">{tr(locale, 'branch')}
+          <select name="branch" defaultValue={initial?.branch}>
+            {branches.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
+          </select>
+        </label>
+        <label className="field">{tr(locale, 'room')}
+          <input name="room" defaultValue={initial?.room} placeholder="Room 1" />
+        </label>
+        <label className="field">{tr(locale, 'capacity')}
+          <input name="capacity" type="number" defaultValue={initial?.capacity || 16} />
+        </label>
+        <label className="field">{tr(locale, 'time')}
+          <input name="time" type="time" defaultValue={initial?.time || '09:00'} />
+        </label>
+      </div>
+      <label className="field" style={{ marginTop: 12 }}>{tr(locale, 'days')}
+        <div className="daypicker">
+          {weekDays.map(d => (
+            <button type="button" key={d} className={days.includes(d) ? 'active' : ''} onClick={() => toggleDay(d)}>{tr(locale, d)}</button>
+          ))}
+        </div>
+      </label>
+      <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+        <button type="submit" className="btn btn-primary btn-sm">{tr(locale, 'save')}</button>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={onCancel}>{tr(locale, 'cancel')}</button>
+      </div>
+    </form>
+  );
+}
+
+export function Groups({ groups, teachers = [], branches = [], canManage = true, locale = 'ru', onSaveGroup }) {
+  const [modal, setModal] = useState(null); // null | 'new' | group id
+
+  const editingGroup = typeof modal === 'string' && modal !== 'new' ? groups.find(g => g.id === modal) : null;
+
   return (
     <section className="content">
-      <PageHead title="Группы и уровни" sub="Нагрузка, вместимость, преподаватели и аудитории">
-        <button className="btn btn-primary"><Plus size={16} /> Новая группа</button>
+      <PageHead title={tr(locale, 'groups')} sub="Нагрузка, вместимость, преподаватели и аудитории">
+        {canManage && <button className="btn btn-primary" onClick={() => setModal('new')}><Plus size={16} /> {tr(locale, 'addGroup')}</button>}
       </PageHead>
       <div className="cardgrid">
         {groups.map(g => {
@@ -15,9 +70,14 @@ export function Groups({ groups }) {
               <div className="group-top">
                 <span className="level big">{g.level}</span>
                 <span className="chip">{g.branch}</span>
+                {canManage && (
+                  <button className="iconbtn sm" style={{ marginInlineStart: 'auto' }} onClick={() => setModal(g.id)} aria-label="edit">
+                    <Pencil size={13} />
+                  </button>
+                )}
               </div>
               <h3>{g.name}</h3>
-              <p>{g.teacher} · {g.schedule}</p>
+              <p>{g.teacher} · {formatSchedule(g.days, g.time, locale)}</p>
               <div className="groupmeta">
                 <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Building2 size={13} /> {g.room}</span>
                 <b>{g.students}/{g.capacity} мест</b>
@@ -27,14 +87,27 @@ export function Groups({ groups }) {
           );
         })}
       </div>
+
+      {modal && (
+        <Modal title={modal === 'new' ? tr(locale, 'addGroup') : tr(locale, 'editGroup')} onClose={() => setModal(null)}>
+          <GroupForm
+            initial={editingGroup}
+            teachers={teachers}
+            branches={branches}
+            locale={locale}
+            onCancel={() => setModal(null)}
+            onSubmit={data => { onSaveGroup(modal === 'new' ? null : modal, data); setModal(null); }}
+          />
+        </Modal>
+      )}
     </section>
   );
 }
 
-export function Teachers({ teachers }) {
+export function Teachers({ teachers, locale = 'ru' }) {
   return (
     <section className="content">
-      <PageHead title="Преподаватели" sub="Группы, нагрузка, специализация и контакты">
+      <PageHead title={tr(locale, 'teachers')} sub="Группы, нагрузка, специализация и контакты">
         <button className="btn btn-primary"><Plus size={16} /> Добавить преподавателя</button>
       </PageHead>
       <div className="cardgrid">

@@ -1,11 +1,12 @@
 import { Plus, Target, ChevronRight } from 'lucide-react';
 import { PageHead } from '../components/UI.jsx';
+import { tr } from '../i18n.js';
 import { shortDate, initials } from '../utils.js';
 
 const STAGES = ['new', 'contacted', 'trial', 'won'];
 const STAGE_LABEL = { new: 'Новые', contacted: 'Связались', trial: 'Пробный урок', won: 'Записаны', lost: 'Отказ' };
 
-export function Leads({ leads, setLeads }) {
+export function Leads({ leads, setLeads, locale = 'ru' }) {
   function advance(id) {
     setLeads(v => v.map(l => {
       if (l.id !== id) return l;
@@ -15,7 +16,7 @@ export function Leads({ leads, setLeads }) {
   }
   return (
     <section className="content">
-      <PageHead title="Лиды и набор" sub="От заявки до записи в группу">
+      <PageHead title={tr(locale, 'leads')} sub="От заявки до записи в группу">
         <button className="btn btn-primary"><Plus size={16} /> Новый лид</button>
       </PageHead>
       <div className="pipeline">

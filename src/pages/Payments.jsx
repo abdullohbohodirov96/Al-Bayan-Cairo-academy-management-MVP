@@ -1,9 +1,10 @@
 import { BellRing, CheckCircle2, Database } from 'lucide-react';
 import { PageHead, Avatar, StatCard } from '../components/UI.jsx';
+import { tr } from '../i18n.js';
 import { money, shortDate, dayDiff, todayISO } from '../utils.js';
 import { WalletCards, Clock3, AlertTriangle } from 'lucide-react';
 
-export function Payments({ students, togglePay, sendReminder }) {
+export function Payments({ students, togglePay, sendReminder, locale = 'ru' }) {
   const unpaid = students.filter(s => !s.paid);
   const collected = students.reduce((a, s) => a + s.paidAmount, 0);
   const remaining = students.reduce((a, s) => a + Math.max(0, s.fee - s.paidAmount), 0);
@@ -11,7 +12,7 @@ export function Payments({ students, togglePay, sendReminder }) {
 
   return (
     <section className="content">
-      <PageHead title="Оплаты" sub="Ежемесячные начисления, частичные оплаты и напоминания" />
+      <PageHead title={tr(locale, 'payments')} sub="Ежемесячные начисления, частичные оплаты и напоминания" />
 
       <div className="statgrid">
         <StatCard icon={WalletCards} value={money(collected)} label="Собрано по выборке" />

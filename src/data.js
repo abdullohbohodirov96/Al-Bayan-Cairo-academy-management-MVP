@@ -18,14 +18,19 @@ export const seedTeachers = [
   {id:'T-04',name:'Ustoz Salim',groups:2,students:21,phone:'+998 95 333 44 55',status:'online',speciality:'Intensive · Conversation',load:55}
 ];
 
+export const seedBranches = [
+  {id:'BR-1',name:'Cairo Main',city:'Cairo',address:'Nasr St. 12'},
+  {id:'BR-2',name:'Nasr City',city:'Cairo',address:'El Tayaran St. 40'}
+];
+
 export const seedGroups = [
-  {id:'G-01',name:'A1 — Weekend',level:'A1',teacher:'Ustoz Hamza',schedule:'Сб / Вс · 10:00',room:'Room 1',students:14,capacity:18,branch:'Cairo Main'},
-  {id:'G-02',name:'A2 — Morning',level:'A2',teacher:'Ustoz Hamza',schedule:'Пн / Ср / Пт · 09:00',room:'Room 2',students:16,capacity:18,branch:'Cairo Main'},
-  {id:'G-03',name:'B1 — Evening',level:'B1',teacher:'Ustoz Yusuf',schedule:'Пн / Ср / Пт · 18:30',room:'Room 4',students:17,capacity:20,branch:'Nasr City'},
-  {id:'G-04',name:'B2 — Evening',level:'B2',teacher:'Ustoz Ahmad',schedule:'Вт / Чт · 19:00',room:'Room 3',students:13,capacity:18,branch:'Cairo Main'},
-  {id:'G-05',name:'C1 — Evening',level:'C1',teacher:'Ustoz Ahmad',schedule:'Вт / Чт · 20:30',room:'Room 3',students:11,capacity:16,branch:'Nasr City'},
-  {id:'G-06',name:'A1 — Intensive',level:'A1',teacher:'Ustoz Salim',schedule:'Пн–Чт · 14:00',room:'Room 5',students:12,capacity:16,branch:'Nasr City'},
-  {id:'G-07',name:'A2 — Speaking',level:'A2',teacher:'Ustoz Ahmad',schedule:'Сб · 16:00',room:'Room 2',students:9,capacity:14,branch:'Cairo Main'}
+  {id:'G-01',name:'A1 — Weekend',level:'A1',teacher:'Ustoz Hamza',days:['sat','sun'],time:'10:00',room:'Room 1',students:14,capacity:18,branch:'Cairo Main'},
+  {id:'G-02',name:'A2 — Morning',level:'A2',teacher:'Ustoz Hamza',days:['mon','wed','fri'],time:'09:00',room:'Room 2',students:16,capacity:18,branch:'Cairo Main'},
+  {id:'G-03',name:'B1 — Evening',level:'B1',teacher:'Ustoz Yusuf',days:['mon','wed','fri'],time:'18:30',room:'Room 4',students:17,capacity:20,branch:'Nasr City'},
+  {id:'G-04',name:'B2 — Evening',level:'B2',teacher:'Ustoz Ahmad',days:['tue','thu'],time:'19:00',room:'Room 3',students:13,capacity:18,branch:'Cairo Main'},
+  {id:'G-05',name:'C1 — Evening',level:'C1',teacher:'Ustoz Ahmad',days:['tue','thu'],time:'20:30',room:'Room 3',students:11,capacity:16,branch:'Nasr City'},
+  {id:'G-06',name:'A1 — Intensive',level:'A1',teacher:'Ustoz Salim',days:['mon','tue','wed','thu'],time:'14:00',room:'Room 5',students:12,capacity:16,branch:'Nasr City'},
+  {id:'G-07',name:'A2 — Speaking',level:'A2',teacher:'Ustoz Ahmad',days:['sat'],time:'16:00',room:'Room 2',students:9,capacity:14,branch:'Cairo Main'}
 ];
 
 export const seedLessons = [

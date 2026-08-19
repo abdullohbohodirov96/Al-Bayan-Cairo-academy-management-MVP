@@ -1,8 +1,8 @@
 import { Menu, BellRing } from 'lucide-react';
 import { SearchBox } from './SearchBox.jsx';
-import { tr } from '../i18n.js';
+import { tr, localeNames } from '../i18n.js';
 
-export function Topbar({ locale, account, query, setQuery, dataset, onOpenRecord, onMenu, unread, onLogout }) {
+export function Topbar({ locale, setLocale, account, query, setQuery, dataset, onOpenRecord, onMenu, unread, onLogout }) {
   return (
     <header className="topbar">
       <button className="hamburger" onClick={onMenu} aria-label="Меню">
@@ -18,6 +18,11 @@ export function Topbar({ locale, account, query, setQuery, dataset, onOpenRecord
         />
       </div>
       <div className="topbar-right">
+        {setLocale && (
+          <select className="langswitch" value={locale} onChange={e => setLocale(e.target.value)} aria-label={tr(locale, 'language')}>
+            {Object.entries(localeNames).map(([code, label]) => <option key={code} value={code}>{label}</option>)}
+          </select>
+        )}
         <button className="iconbtn" aria-label="Уведомления">
           <BellRing size={16} />
           {unread > 0 && <span className="dot" />}

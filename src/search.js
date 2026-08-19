@@ -51,7 +51,7 @@ export function makeSuggestions(query,{students=[],teachers=[],groups=[],leads=[
   const rows = [
     ...students.map(x=>({...x,type:'student',subtitle:`${x.id} · ${x.level} · ${x.group}`})),
     ...teachers.map(x=>({...x,type:'teacher',subtitle:`${x.id} · ${x.speciality}`})),
-    ...groups.map(x=>({...x,type:'group',subtitle:`${x.level} · ${x.teacher} · ${x.schedule}`})),
+    ...groups.map(x=>({...x,type:'group',subtitle:`${x.level} · ${x.teacher} · ${(x.days||[]).join('/')} ${x.time||''}`})),
     ...leads.map(x=>({...x,type:'lead',subtitle:`${x.id} · ${x.source} · ${x.stage}`}))
   ];
   return rows

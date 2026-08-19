@@ -20,7 +20,7 @@ import { Reminders } from './pages/Reminders.jsx';
 import { Analytics } from './pages/Analytics.jsx';
 import { SettingsPage } from './pages/Settings.jsx';
 
-import { seedStudents, seedTeachers, seedGroups, seedLessons, seedLeads, reminderRules as seedRules } from './data.js';
+import { seedStudents, seedTeachers, seedGroups, seedLessons, seedLeads, seedBranches, reminderRules as seedRules } from './data.js';
 import { isPrefixMatch } from './search.js';
 import { initials, todayISO } from './utils.js';
 import { rolePages, roleCanEdit, defaultPageFor } from './roles.js';
@@ -33,6 +33,8 @@ export default function App() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [students, setStudents] = useState(seedStudents);
+  const [groups, setGroups] = useState(seedGroups);
+  const [branches, setBranches] = useState(seedBranches);
   const [leads, setLeads] = useState(seedLeads);
   const [rules, setRules] = useState(seedRules);
   const [messageLog, setMessageLog] = useState([
@@ -98,6 +100,44 @@ export default function App() {
     setToast('SMS добавлено в очередь. Провайдер подключается отдельно.');
   }
 
+  function saveBranch(id, form) {
+    if (id) {
+      setBranches(v => v.map(b => b.id === id ? { ...b, ...form } : b));
+    } else {
+      setBranches(v => [...v, { id: 'BR-' + (v.length + 1) + '-' + Date.now().toString(36), ...form }]);
+    }
+    setToast('Филиал сохранён');
+  }
+
+  function deleteBranch(id) {
+    setBranches(v => v.filter(b => b.id !== id));
+    setToast('Филиал удалён');
+  }
+
+  function saveGroup(id, form) {
+    const capacity = Number(form.capacity) || 16;
+    if (id) {
+      setGroups(v => v.map(g => g.id === id ? { ...g, ...form, capacity } : g));
+    } else {
+      setGroups(v => [...v, {
+        id: 'G-' + String(v.length + 1).padStart(2, '0') + '-' + Date.now().toString(36),
+        ...form, capacity, students: 0,
+      }]);
+    }
+    setToast('Группа сохранена');
+  }
+
+  function saveAttendance(group, marked) {
+    setStudents(v => v.map(s => {
+      const mark = marked[s.id];
+      if (!mark || s.group !== group?.name) return s;
+      const bump = mark === 'present' ? 1 : mark === 'late' ? 0 : -2;
+      return { ...s, attendance: Math.max(0, Math.min(100, s.attendance + bump)) };
+    }));
+    setToast('Посещаемость сохранена');
+    setPage('overview');
+  }
+
   function openRecord(item) {
     setQuery('');
     if (item.type === 'student') { setPage('students'); setSelected(item); }
@@ -131,7 +171,7 @@ export default function App() {
     ? students.filter(s => s.teacher === account.name)
     : students;
   const scopedFiltered = scopedStudents.filter(s => isPrefixMatch(s, query));
-  const dataset = { students: scopedStudents, teachers: seedTeachers, groups: seedGroups, leads };
+  const dataset = { students: scopedStudents, teachers: seedTeachers, groups, leads };
 
   return (
     <div className={'shell' + (railMode ? ' rail' : '')}>
@@ -142,7 +182,7 @@ export default function App() {
       />
       <div className="main">
         <Topbar
-          locale={locale} account={account} query={query} setQuery={setQuery}
+          locale={locale} setLocale={setLocale} account={account} query={query} setQuery={setQuery}
           dataset={dataset} onOpenRecord={openRecord}
           onMenu={() => setMobileOpen(true)} unread={stats.overdue}
           onLogout={handleLogout}
@@ -152,22 +192,26 @@ export default function App() {
           <Overview stats={stats} students={scopedStudents} lessons={seedLessons} leads={leads} setPage={setPage} sendReminder={sendReminder} account={account} canManage={canManage} />
         )}
         {page === 'students' && allowedPages.includes('students') && (
-          <Students students={scopedFiltered} query={query} setModal={setModal} setSelected={setSelected} togglePay={togglePay} sendReminder={sendReminder} canManage={canManage} />
+          <Students students={scopedFiltered} query={query} setModal={setModal} setSelected={setSelected} togglePay={togglePay} sendReminder={sendReminder} canManage={canManage} locale={locale} />
         )}
         {page === 'payments' && allowedPages.includes('payments') && (
-          <Payments students={filteredStudents} togglePay={togglePay} sendReminder={sendReminder} />
+          <Payments students={filteredStudents} togglePay={togglePay} sendReminder={sendReminder} locale={locale} />
         )}
-        {page === 'groups' && allowedPages.includes('groups') && <Groups groups={seedGroups} />}
-        {page === 'teachers' && allowedPages.includes('teachers') && <Teachers teachers={seedTeachers} />}
-        {page === 'attendance' && allowedPages.includes('attendance') && <Attendance students={scopedStudents} />}
+        {page === 'groups' && allowedPages.includes('groups') && (
+          <Groups groups={groups} teachers={seedTeachers} branches={branches} canManage={canManage} locale={locale} onSaveGroup={saveGroup} />
+        )}
+        {page === 'teachers' && allowedPages.includes('teachers') && <Teachers teachers={seedTeachers} locale={locale} />}
+        {page === 'attendance' && allowedPages.includes('attendance') && (
+          <Attendance students={scopedStudents} groups={groups} account={account} locale={locale} onSaveAttendance={saveAttendance} />
+        )}
         {page === 'schedule' && allowedPages.includes('schedule') && <Schedule lessons={seedLessons} />}
-        {page === 'leads' && allowedPages.includes('leads') && <Leads leads={leads} setLeads={setLeads} />}
+        {page === 'leads' && allowedPages.includes('leads') && <Leads leads={leads} setLeads={setLeads} locale={locale} />}
         {page === 'reminders' && allowedPages.includes('reminders') && (
-          <Reminders students={students} rules={rules} setRules={setRules} messageLog={messageLog} sendReminder={sendReminder} />
+          <Reminders students={students} rules={rules} setRules={setRules} messageLog={messageLog} sendReminder={sendReminder} locale={locale} />
         )}
-        {page === 'analytics' && allowedPages.includes('analytics') && <Analytics stats={stats} students={students} leads={leads} />}
+        {page === 'analytics' && allowedPages.includes('analytics') && <Analytics stats={stats} students={students} leads={leads} locale={locale} />}
         {page === 'settings' && allowedPages.includes('settings') && (
-          <SettingsPage account={account} locale={locale} setLocale={setLocale} onLogout={handleLogout} />
+          <SettingsPage account={account} locale={locale} setLocale={setLocale} onLogout={handleLogout} branches={branches} onSaveBranch={saveBranch} onDeleteBranch={deleteBranch} />
         )}
       </div>
 
@@ -185,7 +229,7 @@ export default function App() {
             <button className="btn btn-primary" type="submit" form="add-student-form">Создать</button>
           </>}
         >
-          <AddStudentForm onSubmit={addStudent} />
+          <AddStudentForm onSubmit={addStudent} branches={branches} />
         </Modal>
       )}
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Plus, Search, BellRing, WalletCards, ChevronRight } from 'lucide-react';
 import { PageHead, Avatar } from '../components/UI.jsx';
+import { tr } from '../i18n.js';
 import { money, shortDate } from '../utils.js';
 
 const FILTERS = [
@@ -9,14 +10,14 @@ const FILTERS = [
   ['low', 'Посещаемость <85%', s => s.attendance < 85],
 ];
 
-export function Students({ students, query, setModal, setSelected, togglePay, sendReminder, canManage = true }) {
+export function Students({ students, query, setModal, setSelected, togglePay, sendReminder, canManage = true, locale = 'ru' }) {
   const [filter, setFilter] = useState('all');
   const active = FILTERS.find(f => f[0] === filter)[2];
   const list = students.filter(active);
 
   return (
     <section className="content">
-      <PageHead title="Ученики" sub={canManage ? 'Карточки, группы, оплаты, посещаемость и контакты' : 'Ваши группы: карточки и посещаемость'}>
+      <PageHead title={tr(locale, 'students')} sub={canManage ? 'Карточки, группы, оплаты, посещаемость и контакты' : 'Ваши группы: карточки и посещаемость'}>
         {canManage && <button className="btn btn-primary" onClick={() => setModal('add')}><Plus size={16} /> Добавить ученика</button>}
       </PageHead>
 

@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { SlidersHorizontal, MessageSquareText, Send, RefreshCcw } from 'lucide-react';
 import { PageHead } from '../components/UI.jsx';
+import { tr } from '../i18n.js';
 import { reminderTemplates } from '../data.js';
 
-export function Reminders({ students, rules, setRules, messageLog, sendReminder }) {
+export function Reminders({ students, rules, setRules, messageLog, sendReminder, locale = 'ru' }) {
   const [previewId, setPreviewId] = useState(students.find(s => !s.paid)?.id || students[0].id);
   const [templateId, setTemplateId] = useState(reminderTemplates[0].id);
   const s = students.find(x => x.id === previewId) || students[0];
@@ -15,7 +16,7 @@ export function Reminders({ students, rules, setRules, messageLog, sendReminder 
 
   return (
     <section className="content">
-      <PageHead title="Напоминания и SMS" sub="Правила, очередь, шаблоны и журнал отправки">
+      <PageHead title={tr(locale, 'reminders')} sub="Правила, очередь, шаблоны и журнал отправки">
         <span className="provider"><span /> Провайдер не подключён</span>
       </PageHead>
       <div className="remindergrid">

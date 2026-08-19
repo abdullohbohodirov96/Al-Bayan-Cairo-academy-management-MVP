@@ -1,10 +1,14 @@
+import { useState } from 'react';
 import { Languages, Building2, Database, LogOut } from 'lucide-react';
 import { PageHead, Avatar } from '../components/UI.jsx';
+import { BranchManager } from '../components/BranchManager.jsx';
+import { tr, localeNames } from '../i18n.js';
 
-export function SettingsPage({ account, locale, setLocale, onLogout }) {
+export function SettingsPage({ account, locale, setLocale, onLogout, branches = [], onSaveBranch, onDeleteBranch }) {
+  const [showBranches, setShowBranches] = useState(false);
   return (
     <section className="content">
-      <PageHead title="Настройки" sub="Аккаунт, язык интерфейса и интеграции" />
+      <PageHead title={tr(locale, 'settings')} sub="Аккаунт, язык интерфейса и интеграции" />
       <div className="settingsgrid">
         <div className="card">
           <div className="cardhead"><div><h3>Организация</h3><p>Базовые параметры центра</p></div><Building2 size={17} /></div>
@@ -15,15 +19,15 @@ export function SettingsPage({ account, locale, setLocale, onLogout }) {
           </div>
           <div className="settingrow">
             <div className="settingicon"><Languages size={16} /></div>
-            <div><b>Язык интерфейса</b><br /><span style={{ fontSize: 11.5, color: 'var(--ink-faint)' }}>RU / UZ / AR, с поддержкой RTL</span></div>
+            <div><b>{tr(locale, 'language')}</b><br /><span style={{ fontSize: 11.5, color: 'var(--ink-faint)' }}>RU / UZ / AR / EN</span></div>
             <select value={locale} onChange={e => setLocale(e.target.value)}>
-              <option value="ru">Русский</option><option value="uz">O‘zbek</option><option value="ar">العربية</option>
+              {Object.entries(localeNames).map(([code, label]) => <option key={code} value={code}>{label}</option>)}
             </select>
           </div>
           <div className="settingrow">
             <div className="settingicon"><Building2 size={16} /></div>
-            <div><b>Филиалы</b><br /><span style={{ fontSize: 11.5, color: 'var(--ink-faint)' }}>Cairo Main · Nasr City</span></div>
-            <button className="btn btn-ghost btn-sm" style={{ marginInlineStart: 'auto' }}>Управлять</button>
+            <div><b>{tr(locale, 'branches')}</b><br /><span style={{ fontSize: 11.5, color: 'var(--ink-faint)' }}>{branches.map(b => b.name).join(' · ')}</span></div>
+            <button className="btn btn-ghost btn-sm" style={{ marginInlineStart: 'auto' }} onClick={() => setShowBranches(true)}>{tr(locale, 'manage')}</button>
           </div>
         </div>
 
@@ -31,8 +35,8 @@ export function SettingsPage({ account, locale, setLocale, onLogout }) {
           <div className="cardhead"><div><h3>Интеграции</h3><p>Секреты хранятся только на сервере</p></div><Database size={17} /></div>
           <div className="integration"><span className="dot ok" /><b>Supabase</b><span>Схема готова</span></div>
           <div className="integration"><span className="dot" /><b>SMS-провайдер</b><span>Нужны API-ключи</span></div>
+          <div className="integration"><span className="dot" /><b>Telegram-бот</b><span>Токен получен, ждёт подключения к Supabase</span></div>
           <div className="integration"><span className="dot" /><b>Платёжный шлюз</b><span>Следующий этап</span></div>
-          <div className="integration"><span className="dot" /><b>Портал ученика</b><span>Следующий этап</span></div>
         </div>
 
         <div className="card" style={{ gridColumn: '1 / -1' }}>
@@ -48,6 +52,16 @@ export function SettingsPage({ account, locale, setLocale, onLogout }) {
           </div>
         </div>
       </div>
+
+      {showBranches && (
+        <BranchManager
+          branches={branches}
+          locale={locale}
+          onSave={onSaveBranch}
+          onDelete={onDeleteBranch}
+          onClose={() => setShowBranches(false)}
+        />
+      )}
     </section>
   );
 }

@@ -1,13 +1,14 @@
 import { PageHead, Donut } from '../components/UI.jsx';
+import { tr } from '../i18n.js';
 import { money } from '../utils.js';
 
 const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
-export function Analytics({ stats, students, leads }) {
+export function Analytics({ stats, students, leads, locale = 'ru' }) {
   const leadWon = leads.filter(l => l.stage === 'won').length;
   return (
     <section className="content">
-      <PageHead title="Аналитика" sub="Финансы, академика и воронка набора" />
+      <PageHead title={tr(locale, 'analytics')} sub="Финансы, академика и воронка набора" />
       <div className="analyticgrid">
         <div className="card">
           <div className="cardhead"><div><h3>Ученики по уровням</h3><p>Текущая структура центра</p></div></div>
