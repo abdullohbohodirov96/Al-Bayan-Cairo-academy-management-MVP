@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogIn, ShieldCheck, AlertCircle } from 'lucide-react';
+import { LogIn, ShieldCheck, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { Rosette } from '../components/Rosette.jsx';
 import { accounts } from '../roles.js';
 import { supabase, supabaseEnabled } from '../supabaseClient.js';
@@ -39,6 +39,7 @@ function DemoLogin({ onLogin }) {
 function SupabaseLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -48,7 +49,12 @@ function SupabaseLogin() {
     setLoading(true);
     const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-    if (authError) setError('Email ёки пароль нотўғри');
+    if (authError) {
+      // Show Supabase's actual reason (wrong password vs unconfirmed email vs
+      // rate-limited, etc.) instead of a single generic message — makes it
+      // possible to tell these apart while setting accounts up.
+      setError(authError.message || 'Email ёки пароль нотўғри');
+    }
     // On success, App.jsx's onAuthStateChange listener picks up the session.
   }
 
@@ -63,7 +69,20 @@ function SupabaseLogin() {
           <input type="email" required autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} placeholder="ceo@albayan.uz" />
         </label>
         <label className="field">Пароль
-          <input type="password" required autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} />
+          <div style={{ position: 'relative' }}>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              required autoComplete="current-password"
+              value={password} onChange={e => setPassword(e.target.value)}
+              style={{ paddingInlineEnd: 38 }}
+            />
+            <button
+              type="button" onClick={() => setShowPassword(v => !v)}
+              className="pwdtoggle" aria-label={showPassword ? 'Паролни яшириш' : 'Паролни кўрсатиш'}
+            >
+              {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+            </button>
+          </div>
         </label>
       </div>
 
