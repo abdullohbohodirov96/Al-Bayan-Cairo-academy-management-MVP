@@ -56,7 +56,7 @@ export default function App() {
   useEffect(() => {
     if (!supabaseEnabled) return;
 
-    async function loadProfile(user) {
+    async function loadProfile(user, isFreshSignIn) {
       if (!user) { setAccount(null); setAuthChecked(true); return; }
       const { data: profile, error } = await supabase
         .from('profiles')
@@ -69,24 +69,36 @@ export default function App() {
         setAuthChecked(true);
         return;
       }
-      setAccount({
-        id: profile.id,
-        role: profile.role,
-        roleLabel: roleLabels[profile.role] || profile.role,
-        name: profile.full_name,
-        title: roleLabels[profile.role] || profile.role,
-        avatar: profile.avatar_url || initials(profile.full_name),
+      setAccount(prev => {
+        // Same person already loaded (e.g. a background token refresh) —
+        // keep the object stable so nothing downstream re-renders/resets.
+        if (prev && prev.id === profile.id) return prev;
+        return {
+          id: profile.id,
+          role: profile.role,
+          roleLabel: roleLabels[profile.role] || profile.role,
+          name: profile.full_name,
+          title: roleLabels[profile.role] || profile.role,
+          avatar: profile.avatar_url || initials(profile.full_name),
+        };
       });
-      setPage(defaultPageFor(profile.role));
       setAuthChecked(true);
-      const remoteBranches = await fetchBranches();
-      if (remoteBranches) setBranches(remoteBranches);
-      const remoteGroups = await fetchGroups();
-      if (remoteGroups && remoteGroups.length) setGroups(remoteGroups);
+      // Only jump to the role's home page (and reload branches/groups) on an
+      // actual sign-in — not on every background token refresh, which
+      // otherwise silently kicked people back to Overview mid-work.
+      if (isFreshSignIn) {
+        setPage(defaultPageFor(profile.role));
+        const remoteBranches = await fetchBranches();
+        if (remoteBranches) setBranches(remoteBranches);
+        const remoteGroups = await fetchGroups();
+        if (remoteGroups && remoteGroups.length) setGroups(remoteGroups);
+      }
     }
 
-    supabase.auth.getSession().then(({ data }) => loadProfile(data.session?.user));
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => loadProfile(session?.user));
+    supabase.auth.getSession().then(({ data }) => loadProfile(data.session?.user, true));
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      loadProfile(session?.user, event === 'SIGNED_IN');
+    });
     return () => sub.subscription.unsubscribe();
   }, []);
 
