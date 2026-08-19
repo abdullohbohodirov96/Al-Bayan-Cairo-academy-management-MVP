@@ -108,16 +108,17 @@ function Sidebar({page,setPage,role,mobile,setMobile,stats,locale}){return <asid
 </aside>}
 
 function Header({page,role,query,setQuery,locale,setLocale,searchOpen,setSearchOpen,openResult,data,setMobile}){
-  const box=useRef(null);const [active,setActive]=useState(0);
+  const box=useRef(null);const inputRef=useRef(null);const [active,setActive]=useState(0);
   const suggestions=useMemo(()=>makeSuggestions(query,data,8),[query,data]);
   useEffect(()=>{function outside(e){if(box.current&&!box.current.contains(e.target))setSearchOpen(false)}document.addEventListener('mousedown',outside);return()=>document.removeEventListener('mousedown',outside)},[setSearchOpen]);
+  useEffect(()=>{function shortcut(e){if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();setSearchOpen(true);setTimeout(()=>inputRef.current?.focus(),0)}}document.addEventListener('keydown',shortcut);return()=>document.removeEventListener('keydown',shortcut)},[setSearchOpen]);
   function keyDown(e){if(!searchOpen||!suggestions.length)return;if(e.key==='ArrowDown'){e.preventDefault();setActive(v=>(v+1)%suggestions.length)}if(e.key==='ArrowUp'){e.preventDefault();setActive(v=>(v-1+suggestions.length)%suggestions.length)}if(e.key==='Enter'){e.preventDefault();openResult(suggestions[active])}if(e.key==='Escape')setSearchOpen(false)}
   return <header>
     <button className="hamb" onClick={()=>setMobile(true)}><Menu size={21}/></button>
     <div className="crumb">Аль-Баян Каиро <ChevronRight size={14}/> <b>{tr(locale,page)||pageTitle[page]}</b></div>
     <div className="header-actions">
       <div className="search-wrap" ref={box}>
-        <div className={'search '+(searchOpen?'focus':'')}><Search size={17}/><input aria-label="Глобальный поиск" placeholder={tr(locale,'search')} value={query} onFocus={()=>setSearchOpen(true)} onChange={e=>{setQuery(e.target.value);setSearchOpen(true);setActive(0)}} onKeyDown={keyDown}/>{query&&<button className="clear" onClick={()=>setQuery('')}><X size={14}/></button>}<kbd>⌘K</kbd></div>
+        <div className={'search '+(searchOpen?'focus':'')}><Search size={17}/><input ref={inputRef} aria-label="Глобальный поиск" placeholder={tr(locale,'search')} value={query} onFocus={()=>setSearchOpen(true)} onChange={e=>{setQuery(e.target.value);setSearchOpen(true);setActive(0)}} onKeyDown={keyDown}/>{query&&<button className="clear" onClick={()=>setQuery('')}><X size={14}/></button>}<kbd>⌘K</kbd></div>
         {searchOpen&&query&&<SearchSuggestions items={suggestions} active={active} openResult={openResult}/>} 
       </div>
       <select className="lang" value={locale} onChange={e=>setLocale(e.target.value)} aria-label="Язык интерфейса"><option value="ru">RU</option><option value="uz">UZ</option><option value="ar">AR</option></select>

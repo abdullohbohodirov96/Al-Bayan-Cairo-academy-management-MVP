@@ -103,6 +103,14 @@ Frontend/UX takeaway: rich coaching-center operations, though Al-Bayan should ex
 
 What Al-Bayan adopts now: payment reminder rules, lead follow-up, fee status, queue/log model.
 
+
+## Existing Al-Bayan student-facing platform
+Official: https://www.al-bayanacademy.com/
+
+The public academy experience already exposes a learning layer with registration, payment/receipt flow, video lessons, downloadable PDF materials, assessments with teacher feedback, live speaking class booking, community posts, admin chat and a student dashboard.
+
+Product implication: the management MVP should not become a second heavy LMS. It should become the **operations source of truth** (students, groups, attendance, billing, reminders, teachers, leads), and later expose selected data to the student/teacher portal. That keeps the admin frontend fast while preserving the richer learning experience for students.
+
 ## Common pattern across the market
 
 The repeated core is:
