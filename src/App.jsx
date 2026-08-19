@@ -25,7 +25,7 @@ import { isPrefixMatch } from './search.js';
 import { initials, todayISO } from './utils.js';
 import { rolePages, roleCanEdit, defaultPageFor } from './roles.js';
 import { supabase, supabaseEnabled } from './supabaseClient.js';
-import { fetchBranches, upsertBranch, deleteBranchRemote } from './dataService.js';
+import { fetchBranches, upsertBranch, deleteBranchRemote, fetchGroups, upsertGroup } from './dataService.js';
 
 const roleLabels = { ceo: 'CEO', admin: 'Админ', teacher: 'Ustoz' };
 
@@ -81,6 +81,8 @@ export default function App() {
       setAuthChecked(true);
       const remoteBranches = await fetchBranches();
       if (remoteBranches) setBranches(remoteBranches);
+      const remoteGroups = await fetchGroups();
+      if (remoteGroups && remoteGroups.length) setGroups(remoteGroups);
     }
 
     supabase.auth.getSession().then(({ data }) => loadProfile(data.session?.user));
@@ -164,7 +166,7 @@ export default function App() {
     if (supabaseEnabled) await deleteBranchRemote(id);
   }
 
-  function saveGroup(id, form) {
+  async function saveGroup(id, form) {
     const capacity = Number(form.capacity) || 16;
     if (id) {
       setGroups(v => v.map(g => g.id === id ? { ...g, ...form, capacity } : g));
@@ -175,6 +177,10 @@ export default function App() {
       }]);
     }
     setToast('Группа сохранена');
+    if (supabaseEnabled) {
+      const saved = await upsertGroup(id, form);
+      if (saved) setGroups(v => v.map(g => (g.id === id || g.name === form.name) ? saved : g));
+    }
   }
 
   function saveAttendance(group, marked) {

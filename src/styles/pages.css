@@ -170,3 +170,6 @@
 
 /* Topbar language switcher */
 .langswitch{border:1px solid var(--line);border-radius:var(--r-full);background:var(--surface);color:var(--ink-soft);font-size:12px;padding:7px 10px;cursor:pointer}
+
+/* Telegram sync chip on group cards */
+.chip-ok{border-color:var(--emerald);color:var(--emerald-deep);background:rgba(30,111,92,.08)}

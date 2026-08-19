@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Building2, Phone, Pencil } from 'lucide-react';
+import { Plus, Building2, Phone, Pencil, MessageCircle } from 'lucide-react';
 import { PageHead, Progress, Modal } from '../components/UI.jsx';
 import { tr, formatSchedule, weekDays } from '../i18n.js';
 
@@ -35,6 +35,9 @@ function GroupForm({ initial, teachers, branches, locale, onSubmit, onCancel }) 
         </label>
         <label className="field">{tr(locale, 'time')}
           <input name="time" type="time" defaultValue={initial?.time || '09:00'} />
+        </label>
+        <label className="field">{tr(locale, 'groupCode')}
+          <input name="groupCode" defaultValue={initial?.groupCode} placeholder="S22-22" />
         </label>
       </div>
       <label className="field" style={{ marginTop: 12 }}>{tr(locale, 'days')}
@@ -78,6 +81,11 @@ export function Groups({ groups, teachers = [], branches = [], canManage = true,
               </div>
               <h3>{g.name}</h3>
               <p>{g.teacher} · {formatSchedule(g.days, g.time, locale)}</p>
+              {g.groupCode && (
+                <div className={'chip' + (g.telegramChatId ? ' chip-ok' : '')} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginBottom: 8 }}>
+                  <MessageCircle size={12} /> {g.groupCode}{g.telegramChatId ? '' : ' · bot kutilmoqda'}
+                </div>
+              )}
               <div className="groupmeta">
                 <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Building2 size={13} /> {g.room}</span>
                 <b>{g.students}/{g.capacity} мест</b>
