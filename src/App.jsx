@@ -24,9 +24,14 @@ import { seedStudents, seedTeachers, seedGroups, seedLessons, seedLeads, seedBra
 import { isPrefixMatch } from './search.js';
 import { initials, todayISO } from './utils.js';
 import { rolePages, roleCanEdit, defaultPageFor } from './roles.js';
+import { supabase, supabaseEnabled } from './supabaseClient.js';
+import { fetchBranches, upsertBranch, deleteBranchRemote } from './dataService.js';
+
+const roleLabels = { ceo: 'CEO', admin: 'Админ', teacher: 'Ustoz' };
 
 export default function App() {
   const [account, setAccount] = useState(null);
+  const [authChecked, setAuthChecked] = useState(!supabaseEnabled);
   const [page, setPage] = useState('overview');
   const [locale, setLocale] = useState('ru');
   const [railMode, setRailMode] = useState(false);
@@ -44,6 +49,44 @@ export default function App() {
   const [modal, setModal] = useState(null);
   const [selected, setSelected] = useState(null);
   const [toast, setToast] = useState('');
+
+  // Real Supabase Auth session — replaces the demo account-picker whenever
+  // env vars are configured. We fetch the matching `profiles` row to learn
+  // the person's role, since that (not the auth user) drives what they see.
+  useEffect(() => {
+    if (!supabaseEnabled) return;
+
+    async function loadProfile(user) {
+      if (!user) { setAccount(null); setAuthChecked(true); return; }
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, phone, role, avatar_url, is_active')
+        .eq('id', user.id)
+        .single();
+      if (error || !profile || !profile.is_active) {
+        setToast(error ? 'Профиль топилмади — админга мурожаат қилинг' : '');
+        setAccount(null);
+        setAuthChecked(true);
+        return;
+      }
+      setAccount({
+        id: profile.id,
+        role: profile.role,
+        roleLabel: roleLabels[profile.role] || profile.role,
+        name: profile.full_name,
+        title: roleLabels[profile.role] || profile.role,
+        avatar: profile.avatar_url || initials(profile.full_name),
+      });
+      setPage(defaultPageFor(profile.role));
+      setAuthChecked(true);
+      const remoteBranches = await fetchBranches();
+      if (remoteBranches) setBranches(remoteBranches);
+    }
+
+    supabase.auth.getSession().then(({ data }) => loadProfile(data.session?.user));
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => loadProfile(session?.user));
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     document.documentElement.lang = locale;
@@ -100,18 +143,25 @@ export default function App() {
     setToast('SMS добавлено в очередь. Провайдер подключается отдельно.');
   }
 
-  function saveBranch(id, form) {
+  async function saveBranch(id, form) {
     if (id) {
       setBranches(v => v.map(b => b.id === id ? { ...b, ...form } : b));
+      if (supabaseEnabled) await upsertBranch(id, form);
     } else {
-      setBranches(v => [...v, { id: 'BR-' + (v.length + 1) + '-' + Date.now().toString(36), ...form }]);
+      const tempId = 'BR-' + Date.now().toString(36);
+      setBranches(v => [...v, { id: tempId, ...form }]);
+      if (supabaseEnabled) {
+        const saved = await upsertBranch(null, form);
+        if (saved) setBranches(v => v.map(b => b.id === tempId ? { id: saved.id, ...form } : b));
+      }
     }
     setToast('Филиал сохранён');
   }
 
-  function deleteBranch(id) {
+  async function deleteBranch(id) {
     setBranches(v => v.filter(b => b.id !== id));
     setToast('Филиал удалён');
+    if (supabaseEnabled) await deleteBranchRemote(id);
   }
 
   function saveGroup(id, form) {
@@ -154,10 +204,15 @@ export default function App() {
   }
 
   function handleLogout() {
+    if (supabaseEnabled) supabase.auth.signOut();
     setAccount(null);
     setSelected(null);
     setModal(null);
     setQuery('');
+  }
+
+  if (!authChecked) {
+    return null; // brief flash while we check for an existing Supabase session
   }
 
   if (!account) {
