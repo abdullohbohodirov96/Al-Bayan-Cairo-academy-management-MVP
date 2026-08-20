@@ -92,6 +92,9 @@ export function StudentDrawer({ s, onClose, togglePay, sendReminder, canManage =
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, marginTop: 6 }}>
                   <span>Срок</span><b className="mono">{shortDate(s.due)}</b>
                 </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, marginTop: 6 }}>
+                  <span>Дарслар қолди</span><b className="mono">{Math.max(0, 12 - (s.lessonsUsed || 0))} / 12</b>
+                </div>
               </div>
             </>
           )}

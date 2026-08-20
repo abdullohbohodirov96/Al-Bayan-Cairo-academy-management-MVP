@@ -28,7 +28,7 @@ export function Payments({ students, togglePay, sendReminder, locale = 'ru' }) {
         <div className="tablewrap">
           <table>
             <thead>
-              <tr><th>Ученик</th><th>Срок</th><th>Начислено</th><th>Оплачено</th><th>Статус</th><th>Действия</th></tr>
+              <tr><th>Ученик</th><th>Срок</th><th>Начислено</th><th>Оплачено</th><th>Дарслар</th><th>Статус</th><th>Действия</th></tr>
             </thead>
             <tbody>
               {students.map(s => {
@@ -49,6 +49,11 @@ export function Payments({ students, togglePay, sendReminder, locale = 'ru' }) {
                     </td>
                     <td><b>{money(s.fee)}</b></td>
                     <td><b>{money(s.paidAmount)}</b></td>
+                    <td>
+                      <span className={'pill ' + (Math.max(0, 12 - (s.lessonsUsed || 0)) <= 2 ? 'pill-warning' : 'pill-success')}>
+                        {Math.max(0, 12 - (s.lessonsUsed || 0))} дарс қолди
+                      </span>
+                    </td>
                     <td>
                       <span className={'pill ' + (s.paid ? 'pill-success' : s.paidAmount ? 'pill-warning' : 'pill-danger')}>
                         {s.paid ? 'Оплачено' : s.paidAmount ? 'Частично' : 'Ожидает'}

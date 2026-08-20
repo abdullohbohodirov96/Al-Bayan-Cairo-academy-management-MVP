@@ -55,7 +55,7 @@ function GroupForm({ initial, teachers, branches, locale, onSubmit, onCancel }) 
   );
 }
 
-export function Groups({ groups, teachers = [], branches = [], students = [], canManage = true, locale = 'ru', onSaveGroup, onAddStudentToGroup }) {
+export function Groups({ groups, teachers = [], branches = [], students = [], canManage = true, locale = 'ru', onSaveGroup, onAddStudentToGroup, onAssignStudentToGroup }) {
   const [modal, setModal] = useState(null); // null | 'new' | group id
 
   const editingGroup = typeof modal === 'string' && modal !== 'new' ? groups.find(g => g.id === modal) : null;
@@ -99,9 +99,16 @@ export function Groups({ groups, teachers = [], branches = [], students = [], ca
                 </div>
               )}
               {canManage && onAddStudentToGroup && (
-                <button className="btn btn-ghost btn-sm btn-full" style={{ marginTop: 10 }} onClick={() => onAddStudentToGroup(g)}>
-                  <UserPlus size={14} /> O‘quvchi qo‘shish
-                </button>
+                <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+                  <button className="btn btn-ghost btn-sm" style={{ flex: 1 }} onClick={() => onAddStudentToGroup(g)}>
+                    <UserPlus size={14} /> Янги
+                  </button>
+                  {onAssignStudentToGroup && (
+                    <button className="btn btn-ghost btn-sm" style={{ flex: 1 }} onClick={() => onAssignStudentToGroup(g)}>
+                      <UserPlus size={14} /> Мавжуддан
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           );

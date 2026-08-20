@@ -117,7 +117,7 @@ function EditForm({ person, onCancel, onSaved }) {
   );
 }
 
-export function Staff({ locale = 'ru' }) {
+export function Staff({ locale = 'ru', onStaffChanged }) {
   const [staff, setStaff] = useState(null);
   const [error, setError] = useState('');
   const [modal, setModal] = useState(null); // null | 'new' | person object (edit)
@@ -127,6 +127,7 @@ export function Staff({ locale = 'ru' }) {
     if (!res.ok) { setError(res.error); return; }
     setStaff(res.staff);
     setError('');
+    onStaffChanged?.(); // keep Groups/Teachers pages' teacher list in sync
   }
 
   useEffect(() => { reload(); }, []);

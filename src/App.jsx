@@ -52,6 +52,7 @@ export default function App() {
   const [selected, setSelected] = useState(null);
   const [prefillGroup, setPrefillGroup] = useState(null);
   const [payModalStudent, setPayModalStudent] = useState(null);
+  const [assignModalGroup, setAssignModalGroup] = useState(null);
   const [toast, setToast] = useState('');
 
   // Real Supabase Auth session — replaces the demo account-picker whenever
@@ -155,8 +156,17 @@ export default function App() {
     setModal('add');
   }
 
+  function assignStudentToGroup(group) {
+    setAssignModalGroup(group);
+  }
+
+  function confirmAssign(studentId, group) {
+    updateStudent(studentId, { group: group.name, teacher: group.teacher, branch: group.branch, level: group.level });
+    setAssignModalGroup(null);
+  }
+
   function updateStudent(id, form) {
-    setStudents(v => v.map(s => s.id === id ? { ...s, ...form, fee: Number(form.fee) } : s));
+    setStudents(v => v.map(s => s.id === id ? { ...s, ...form, fee: form.fee !== undefined ? Number(form.fee) : s.fee } : s));
     setToast('Ўзгаришлар сақланди');
   }
 
@@ -179,7 +189,7 @@ export default function App() {
 
   function confirmPayment(id, paidDate) {
     setStudents(v => v.map(s => s.id === id
-      ? { ...s, paid: true, paidAmount: s.fee, status: 'active', paidAt: paidDate, due: addMonths(paidDate, 1) }
+      ? { ...s, paid: true, paidAmount: s.fee, status: 'active', paidAt: paidDate, due: addMonths(paidDate, 1), lessonsUsed: 0 }
       : s));
     setPayModalStudent(null);
     setToast('Тўлов қайд этилди, кейинги тўлов санаси автоматик ҳисобланди');
@@ -252,6 +262,12 @@ export default function App() {
     if (supabaseEnabled) await deleteTeacherRemote(id);
   }
 
+  async function refreshTeachers() {
+    if (!supabaseEnabled) return;
+    const remoteTeachers = await fetchTeachers();
+    if (remoteTeachers) setTeachers(remoteTeachers);
+  }
+
   async function addLead(form) {
     const tempId = 'L-' + Date.now().toString(36);
     setLeads(v => [{ id: tempId, ...form, stage: 'new' }, ...v]);
@@ -267,7 +283,10 @@ export default function App() {
       const mark = marked[s.id];
       if (!mark || s.group !== group?.name) return s;
       const bump = mark === 'present' ? 1 : mark === 'late' ? 0 : -2;
-      return { ...s, attendance: Math.max(0, Math.min(100, s.attendance + bump)) };
+      // Present/late count as an attended lesson against the monthly 12,
+      // shown as "N dars qoldi" until the next payment resets it.
+      const lessonsUsed = (mark === 'present' || mark === 'late') ? (s.lessonsUsed || 0) + 1 : (s.lessonsUsed || 0);
+      return { ...s, attendance: Math.max(0, Math.min(100, s.attendance + bump)), lessonsUsed };
     }));
     setToast('Посещаемость сохранена');
     setPage('overview');
@@ -338,7 +357,7 @@ export default function App() {
           <Payments students={filteredStudents} togglePay={togglePay} sendReminder={sendReminder} locale={locale} />
         )}
         {page === 'groups' && allowedPages.includes('groups') && (
-          <Groups groups={groups} teachers={teachers} branches={branches} students={students} canManage={canManage} locale={locale} onSaveGroup={saveGroup} onAddStudentToGroup={addStudentToGroup} />
+          <Groups groups={groups} teachers={teachers} branches={branches} students={students} canManage={canManage} locale={locale} onSaveGroup={saveGroup} onAddStudentToGroup={addStudentToGroup} onAssignStudentToGroup={assignStudentToGroup} />
         )}
         {page === 'teachers' && allowedPages.includes('teachers') && <Teachers teachers={teachers} canManage={canManage} locale={locale} onSaveTeacher={saveTeacher} onDeleteTeacher={deleteTeacher} />}
         {page === 'attendance' && allowedPages.includes('attendance') && (
@@ -350,7 +369,7 @@ export default function App() {
           <Reminders students={students} rules={rules} setRules={setRules} messageLog={messageLog} sendReminder={sendReminder} groups={groups} locale={locale} />
         )}
         {page === 'analytics' && allowedPages.includes('analytics') && <Analytics stats={stats} students={students} leads={leads} locale={locale} />}
-        {page === 'staff' && allowedPages.includes('staff') && <Staff locale={locale} />}
+        {page === 'staff' && allowedPages.includes('staff') && <Staff locale={locale} onStaffChanged={refreshTeachers} />}
         {page === 'settings' && allowedPages.includes('settings') && (
           <SettingsPage account={account} locale={locale} setLocale={setLocale} onLogout={handleLogout} branches={branches} onSaveBranch={saveBranch} onDeleteBranch={deleteBranch} />
         )}
@@ -370,7 +389,7 @@ export default function App() {
             <button className="btn btn-primary" type="submit" form="add-student-form">Создать</button>
           </>}
         >
-          <AddStudentForm onSubmit={addStudent} branches={branches} prefill={prefillGroup} />
+          <AddStudentForm onSubmit={addStudent} branches={branches} groups={groups} prefill={prefillGroup} />
         </Modal>
       )}
 
@@ -391,6 +410,30 @@ export default function App() {
               <button type="button" className="btn btn-ghost btn-sm" onClick={() => setPayModalStudent(null)}>Отмена</button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {assignModalGroup && (
+        <Modal title={`«${assignModalGroup.name}» гуруҳига биriктириш`} onClose={() => setAssignModalGroup(null)}>
+          {(() => {
+            const ungrouped = students.filter(s => !s.group);
+            if (ungrouped.length === 0) {
+              return <p style={{ fontSize: 13, color: 'var(--ink-faint)' }}>Гуруҳсиз ўқувчилар йўқ. Аввал "Янги" тугмаси орқали яратинг ёки бошқа ўқувчини гуруҳдан бўшатинг.</p>;
+            }
+            return (
+              <form onSubmit={e => { e.preventDefault(); const f = new FormData(e.currentTarget); confirmAssign(f.get('studentId'), assignModalGroup); }}>
+                <label className="field">Ўқувчи
+                  <select name="studentId" required>
+                    {ungrouped.map(s => <option key={s.id} value={s.id}>{s.name} · {s.phone}</option>)}
+                  </select>
+                </label>
+                <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                  <button type="submit" className="btn btn-primary btn-sm">Бириктириш</button>
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => setAssignModalGroup(null)}>Отмена</button>
+                </div>
+              </form>
+            );
+          })()}
         </Modal>
       )}
 
