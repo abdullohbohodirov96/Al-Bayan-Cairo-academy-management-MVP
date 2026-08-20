@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Building2, Phone, Pencil, MessageCircle, UserPlus } from 'lucide-react';
+import { Plus, Building2, Phone, Pencil, MessageCircle, UserPlus, Trash2 } from 'lucide-react';
 import { PageHead, Progress, Modal } from '../components/UI.jsx';
 import { tr, formatSchedule, weekDays } from '../i18n.js';
 
@@ -55,7 +55,7 @@ function GroupForm({ initial, teachers, branches, locale, onSubmit, onCancel }) 
   );
 }
 
-export function Groups({ groups, teachers = [], branches = [], canManage = true, locale = 'ru', onSaveGroup, onAddStudentToGroup }) {
+export function Groups({ groups, teachers = [], branches = [], students = [], canManage = true, locale = 'ru', onSaveGroup, onAddStudentToGroup }) {
   const [modal, setModal] = useState(null); // null | 'new' | group id
 
   const editingGroup = typeof modal === 'string' && modal !== 'new' ? groups.find(g => g.id === modal) : null;
@@ -67,7 +67,9 @@ export function Groups({ groups, teachers = [], branches = [], canManage = true,
       </PageHead>
       <div className="cardgrid">
         {groups.map(g => {
-          const pct = Math.round((g.students / g.capacity) * 100);
+          const roster = students.filter(s => s.group === g.name);
+          const enrolled = roster.length;
+          const pct = Math.round((enrolled / g.capacity) * 100);
           return (
             <div className="groupcard" key={g.id}>
               <div className="group-top">
@@ -88,9 +90,14 @@ export function Groups({ groups, teachers = [], branches = [], canManage = true,
               )}
               <div className="groupmeta">
                 <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Building2 size={13} /> {g.room}</span>
-                <b>{g.students}/{g.capacity} мест</b>
+                <b>{enrolled}/{g.capacity} мест</b>
               </div>
               <Progress value={pct} label={`${pct}% заполнено`} />
+              {enrolled > 0 && (
+                <div style={{ fontSize: 11.5, color: 'var(--ink-faint)', marginTop: 8 }}>
+                  {roster.slice(0, 3).map(s => s.name).join(', ')}{enrolled > 3 ? ` +${enrolled - 3}` : ''}
+                </div>
+              )}
               {canManage && onAddStudentToGroup && (
                 <button className="btn btn-ghost btn-sm btn-full" style={{ marginTop: 10 }} onClick={() => onAddStudentToGroup(g)}>
                   <UserPlus size={14} /> O‘quvchi qo‘shish
@@ -139,9 +146,14 @@ function TeacherForm({ initial, locale, onSubmit, onCancel }) {
   );
 }
 
-export function Teachers({ teachers, canManage = true, locale = 'ru', onSaveTeacher }) {
+export function Teachers({ teachers, canManage = true, locale = 'ru', onSaveTeacher, onDeleteTeacher }) {
   const [modal, setModal] = useState(null); // null | 'new' | teacher id
   const editingTeacher = typeof modal === 'string' && modal !== 'new' ? teachers.find(t => t.id === modal) : null;
+
+  function remove(t) {
+    if (!confirm(`${t.name}ni o'chirasizmi?`)) return;
+    onDeleteTeacher(t.id);
+  }
 
   return (
     <section className="content">
@@ -158,9 +170,10 @@ export function Teachers({ teachers, canManage = true, locale = 'ru', onSaveTeac
                 <p>{t.speciality}</p>
               </div>
               {canManage && (
-                <button className="iconbtn sm" style={{ marginInlineStart: 'auto' }} onClick={() => setModal(t.id)} aria-label="edit">
-                  <Pencil size={13} />
-                </button>
+                <div style={{ marginInlineStart: 'auto', display: 'flex', gap: 4 }}>
+                  <button className="iconbtn sm" onClick={() => setModal(t.id)} aria-label="edit"><Pencil size={13} /></button>
+                  <button className="iconbtn sm" onClick={() => remove(t)} aria-label="delete"><Trash2 size={13} /></button>
+                </div>
               )}
             </div>
             <div className="metricsline">

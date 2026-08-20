@@ -26,7 +26,7 @@ import { isPrefixMatch } from './search.js';
 import { initials, todayISO, addMonths } from './utils.js';
 import { rolePages, roleCanEdit, defaultPageFor } from './roles.js';
 import { supabase, supabaseEnabled } from './supabaseClient.js';
-import { fetchBranches, upsertBranch, deleteBranchRemote, fetchGroups, upsertGroup, fetchTeachers, upsertTeacher, fetchLeads, insertLead } from './dataService.js';
+import { fetchBranches, upsertBranch, deleteBranchRemote, fetchGroups, upsertGroup, fetchTeachers, upsertTeacher, deleteTeacherRemote, fetchLeads, insertLead } from './dataService.js';
 
 const roleLabels = { ceo: 'CEO', admin: 'Админ', teacher: 'Ustoz' };
 
@@ -155,6 +155,16 @@ export default function App() {
     setModal('add');
   }
 
+  function updateStudent(id, form) {
+    setStudents(v => v.map(s => s.id === id ? { ...s, ...form, fee: Number(form.fee) } : s));
+    setToast('Ўзгаришлар сақланди');
+  }
+
+  function deleteStudent(id) {
+    setStudents(v => v.filter(s => s.id !== id));
+    setToast('Ўчирилди');
+  }
+
   function togglePay(id) {
     const student = students.find(s => s.id === id);
     if (!student) return;
@@ -234,6 +244,12 @@ export default function App() {
       const saved = await upsertTeacher(id, form);
       if (saved) setTeachers(v => v.map(t => (t.id === id || t.name === form.name) ? { ...t, id: saved.id, name: saved.full_name, phone: saved.phone || '', speciality: saved.specialization || '' } : t));
     }
+  }
+
+  async function deleteTeacher(id) {
+    setTeachers(v => v.filter(t => t.id !== id));
+    setToast('Преподаватель ўчирилди');
+    if (supabaseEnabled) await deleteTeacherRemote(id);
   }
 
   async function addLead(form) {
@@ -322,9 +338,9 @@ export default function App() {
           <Payments students={filteredStudents} togglePay={togglePay} sendReminder={sendReminder} locale={locale} />
         )}
         {page === 'groups' && allowedPages.includes('groups') && (
-          <Groups groups={groups} teachers={teachers} branches={branches} canManage={canManage} locale={locale} onSaveGroup={saveGroup} onAddStudentToGroup={addStudentToGroup} />
+          <Groups groups={groups} teachers={teachers} branches={branches} students={students} canManage={canManage} locale={locale} onSaveGroup={saveGroup} onAddStudentToGroup={addStudentToGroup} />
         )}
-        {page === 'teachers' && allowedPages.includes('teachers') && <Teachers teachers={teachers} canManage={canManage} locale={locale} onSaveTeacher={saveTeacher} />}
+        {page === 'teachers' && allowedPages.includes('teachers') && <Teachers teachers={teachers} canManage={canManage} locale={locale} onSaveTeacher={saveTeacher} onDeleteTeacher={deleteTeacher} />}
         {page === 'attendance' && allowedPages.includes('attendance') && (
           <Attendance students={scopedStudents} groups={groups} account={account} locale={locale} onSaveAttendance={saveAttendance} />
         )}
@@ -385,6 +401,9 @@ export default function App() {
           togglePay={togglePay}
           sendReminder={sendReminder}
           canManage={canManage}
+          branches={branches}
+          onUpdateStudent={updateStudent}
+          onDeleteStudent={deleteStudent}
         />
       )}
 

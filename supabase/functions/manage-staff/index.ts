@@ -97,6 +97,22 @@ Deno.serve(async (req) => {
       await admin.auth.admin.deleteUser(created.user.id); // roll back the orphaned auth user
       return json({ ok: false, error: profileError.message }, 500);
     }
+
+    // A "teacher" login also needs a row in `teachers` — that's the table
+    // Groups/Teachers/attendance actually read from, separate from the
+    // login itself. Link it by profile_id so it shows up immediately.
+    if (role === 'teacher') {
+      const { error: teacherError } = await admin.from('teachers').upsert(
+        { profile_id: created.user.id, full_name, phone: phone || null },
+        { onConflict: 'profile_id' },
+      );
+      if (teacherError) {
+        // Don't roll back the whole account for this — surface it so the
+        // CEO knows to add the teaching profile by hand if it fails.
+        return json({ ok: true, user_id: created.user.id, warning: 'Login яратилди, лекин teachers жадвалига қўшишда хатолик: ' + teacherError.message });
+      }
+    }
+
     return json({ ok: true, user_id: created.user.id });
   }
 
@@ -105,6 +121,13 @@ Deno.serve(async (req) => {
     if (!user_id) return json({ ok: false, error: 'user_id talab qilinadi' }, 400);
     const { error } = await admin.from('profiles').update({ full_name, phone, role }).eq('id', user_id);
     if (error) return json({ ok: false, error: error.message }, 500);
+
+    if (role === 'teacher') {
+      await admin.from('teachers').upsert(
+        { profile_id: user_id, full_name, phone: phone || null },
+        { onConflict: 'profile_id' },
+      );
+    }
     return json({ ok: true });
   }
 
