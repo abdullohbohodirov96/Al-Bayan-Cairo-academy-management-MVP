@@ -25,7 +25,7 @@ import { isPrefixMatch } from './search.js';
 import { initials, todayISO } from './utils.js';
 import { rolePages, roleCanEdit, defaultPageFor } from './roles.js';
 import { supabase, supabaseEnabled } from './supabaseClient.js';
-import { fetchBranches, upsertBranch, deleteBranchRemote, fetchGroups, upsertGroup } from './dataService.js';
+import { fetchBranches, upsertBranch, deleteBranchRemote, fetchGroups, upsertGroup, fetchTeachers, upsertTeacher, fetchLeads, insertLead } from './dataService.js';
 
 const roleLabels = { ceo: 'CEO', admin: 'Админ', teacher: 'Ustoz' };
 
@@ -40,6 +40,7 @@ export default function App() {
   const [students, setStudents] = useState(seedStudents);
   const [groups, setGroups] = useState(seedGroups);
   const [branches, setBranches] = useState(seedBranches);
+  const [teachers, setTeachers] = useState(seedTeachers);
   const [leads, setLeads] = useState(seedLeads);
   const [rules, setRules] = useState(seedRules);
   const [messageLog, setMessageLog] = useState([
@@ -90,8 +91,12 @@ export default function App() {
         setPage(defaultPageFor(profile.role));
         const remoteBranches = await fetchBranches();
         if (remoteBranches) setBranches(remoteBranches);
+        const remoteTeachers = await fetchTeachers();
+        if (remoteTeachers && remoteTeachers.length) setTeachers(remoteTeachers);
         const remoteGroups = await fetchGroups();
         if (remoteGroups && remoteGroups.length) setGroups(remoteGroups);
+        const remoteLeads = await fetchLeads();
+        if (remoteLeads) setLeads(remoteLeads);
       }
     }
 
@@ -195,6 +200,30 @@ export default function App() {
     }
   }
 
+  async function saveTeacher(id, form) {
+    if (id) {
+      setTeachers(v => v.map(t => t.id === id ? { ...t, ...form } : t));
+    } else {
+      const tempId = 'T-' + Date.now().toString(36);
+      setTeachers(v => [...v, { id: tempId, ...form, groups: 0, students: 0, load: 0, status: 'offline' }]);
+    }
+    setToast('Преподаватель сохранён');
+    if (supabaseEnabled) {
+      const saved = await upsertTeacher(id, form);
+      if (saved) setTeachers(v => v.map(t => (t.id === id || t.name === form.name) ? { ...t, id: saved.id, name: saved.full_name, phone: saved.phone || '', speciality: saved.specialization || '' } : t));
+    }
+  }
+
+  async function addLead(form) {
+    const tempId = 'L-' + Date.now().toString(36);
+    setLeads(v => [{ id: tempId, ...form, stage: 'new' }, ...v]);
+    setToast('Лид қўшилди');
+    if (supabaseEnabled) {
+      const saved = await insertLead({ ...form, ownerId: account?.id });
+      if (saved) setLeads(v => v.map(l => l.id === tempId ? saved : l));
+    }
+  }
+
   function saveAttendance(group, marked) {
     setStudents(v => v.map(s => {
       const mark = marked[s.id];
@@ -244,7 +273,7 @@ export default function App() {
     ? students.filter(s => s.teacher === account.name)
     : students;
   const scopedFiltered = scopedStudents.filter(s => isPrefixMatch(s, query));
-  const dataset = { students: scopedStudents, teachers: seedTeachers, groups, leads };
+  const dataset = { students: scopedStudents, teachers, groups, leads };
 
   return (
     <div className={'shell' + (railMode ? ' rail' : '')}>
@@ -271,14 +300,14 @@ export default function App() {
           <Payments students={filteredStudents} togglePay={togglePay} sendReminder={sendReminder} locale={locale} />
         )}
         {page === 'groups' && allowedPages.includes('groups') && (
-          <Groups groups={groups} teachers={seedTeachers} branches={branches} canManage={canManage} locale={locale} onSaveGroup={saveGroup} />
+          <Groups groups={groups} teachers={teachers} branches={branches} canManage={canManage} locale={locale} onSaveGroup={saveGroup} />
         )}
-        {page === 'teachers' && allowedPages.includes('teachers') && <Teachers teachers={seedTeachers} locale={locale} />}
+        {page === 'teachers' && allowedPages.includes('teachers') && <Teachers teachers={teachers} canManage={canManage} locale={locale} onSaveTeacher={saveTeacher} />}
         {page === 'attendance' && allowedPages.includes('attendance') && (
           <Attendance students={scopedStudents} groups={groups} account={account} locale={locale} onSaveAttendance={saveAttendance} />
         )}
         {page === 'schedule' && allowedPages.includes('schedule') && <Schedule lessons={seedLessons} />}
-        {page === 'leads' && allowedPages.includes('leads') && <Leads leads={leads} setLeads={setLeads} locale={locale} />}
+        {page === 'leads' && allowedPages.includes('leads') && <Leads leads={leads} setLeads={setLeads} locale={locale} onAddLead={addLead} />}
         {page === 'reminders' && allowedPages.includes('reminders') && (
           <Reminders students={students} rules={rules} setRules={setRules} messageLog={messageLog} sendReminder={sendReminder} locale={locale} />
         )}

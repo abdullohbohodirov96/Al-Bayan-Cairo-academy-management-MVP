@@ -112,11 +112,36 @@ export function Groups({ groups, teachers = [], branches = [], canManage = true,
   );
 }
 
-export function Teachers({ teachers, locale = 'ru' }) {
+function TeacherForm({ initial, locale, onSubmit, onCancel }) {
+  return (
+    <form onSubmit={e => { e.preventDefault(); const f = new FormData(e.currentTarget); onSubmit(Object.fromEntries(f)); }}>
+      <div className="grid2">
+        <label className="field">Ф.И.Ш.
+          <input name="name" required defaultValue={initial?.name} placeholder="Ustoz Ahmad" />
+        </label>
+        <label className="field">Телефон
+          <input name="phone" defaultValue={initial?.phone} placeholder="+998 90 111 22 33" />
+        </label>
+      </div>
+      <label className="field" style={{ marginTop: 12 }}>Специализация
+        <input name="speciality" defaultValue={initial?.speciality} placeholder="Nahv · Sarf · Speaking" />
+      </label>
+      <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+        <button type="submit" className="btn btn-primary btn-sm">{tr(locale, 'save')}</button>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={onCancel}>{tr(locale, 'cancel')}</button>
+      </div>
+    </form>
+  );
+}
+
+export function Teachers({ teachers, canManage = true, locale = 'ru', onSaveTeacher }) {
+  const [modal, setModal] = useState(null); // null | 'new' | teacher id
+  const editingTeacher = typeof modal === 'string' && modal !== 'new' ? teachers.find(t => t.id === modal) : null;
+
   return (
     <section className="content">
       <PageHead title={tr(locale, 'teachers')} sub="Группы, нагрузка, специализация и контакты">
-        <button className="btn btn-primary"><Plus size={16} /> Добавить преподавателя</button>
+        {canManage && <button className="btn btn-primary" onClick={() => setModal('new')}><Plus size={16} /> Добавить преподавателя</button>}
       </PageHead>
       <div className="cardgrid">
         {teachers.map(t => (
@@ -127,7 +152,11 @@ export function Teachers({ teachers, locale = 'ru' }) {
                 <h3 style={{ fontSize: 15.5 }}>{t.name}</h3>
                 <p>{t.speciality}</p>
               </div>
-              <span className={'dotstatus ' + t.status} />
+              {canManage && (
+                <button className="iconbtn sm" style={{ marginInlineStart: 'auto' }} onClick={() => setModal(t.id)} aria-label="edit">
+                  <Pencil size={13} />
+                </button>
+              )}
             </div>
             <div className="metricsline">
               <div><b>{t.groups}</b><span>групп</span></div>
@@ -139,6 +168,17 @@ export function Teachers({ teachers, locale = 'ru' }) {
           </div>
         ))}
       </div>
+
+      {modal && (
+        <Modal title={modal === 'new' ? 'Янги преподаватель' : 'Ўзгартириш'} onClose={() => setModal(null)}>
+          <TeacherForm
+            initial={editingTeacher}
+            locale={locale}
+            onCancel={() => setModal(null)}
+            onSubmit={data => { onSaveTeacher(modal === 'new' ? null : modal, data); setModal(null); }}
+          />
+        </Modal>
+      )}
     </section>
   );
 }

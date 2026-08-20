@@ -70,8 +70,7 @@ async function resolveId(table, column, value) {
   return data?.id || null;
 }
 
-export async function upsertGroup(id, form) {
-  if (!supabaseEnabled) return null;
+export async function upsertGroup(id, form) {  if (!supabaseEnabled) return null;
   const [level_id, teacher_id, branchRow] = await Promise.all([
     resolveId('levels', 'code', form.level),
     resolveId('teachers', 'full_name', form.teacher),
@@ -97,4 +96,78 @@ export async function upsertGroup(id, form) {
   const { data, error } = await supabase.from('groups').insert(payload).select(GROUP_SELECT).single();
   if (error) { console.error('insertGroup failed:', error.message); return null; }
   return rowToGroup(data);
+}
+
+// --- Teachers -----------------------------------------------------------
+
+export async function fetchTeachers() {
+  if (!supabaseEnabled) return null;
+  const { data, error } = await supabase.from('teachers').select('id, full_name, phone, specialization').order('created_at');
+  if (error) { console.error('fetchTeachers failed:', error.message); return null; }
+  return data.map(t => ({ id: t.id, name: t.full_name, phone: t.phone || '', speciality: t.specialization || '', groups: 0, students: 0, load: 0, status: 'offline' }));
+}
+
+export async function upsertTeacher(id, form) {
+  if (!supabaseEnabled) return null;
+  const payload = { full_name: form.name, phone: form.phone || null, specialization: form.speciality || null };
+  if (id) {
+    const { data, error } = await supabase.from('teachers').update(payload).eq('id', id).select().single();
+    if (error) { console.error('updateTeacher failed:', error.message); return null; }
+    return data;
+  }
+  const { data, error } = await supabase.from('teachers').insert(payload).select().single();
+  if (error) { console.error('insertTeacher failed:', error.message); return null; }
+  return data;
+}
+
+export async function deleteTeacherRemote(id) {
+  if (!supabaseEnabled) return false;
+  const { error } = await supabase.from('teachers').delete().eq('id', id);
+  if (error) { console.error('deleteTeacher failed:', error.message); return false; }
+  return true;
+}
+
+// --- Leads ----------------------------------------------------------------
+
+function rowToLead(row) {
+  return {
+    id: row.id,
+    name: row.full_name,
+    phone: row.phone || '',
+    source: row.source || '',
+    level: row.desired_level || '',
+    stage: row.stage || 'new',
+    next: row.next_follow_up_at ? row.next_follow_up_at.slice(0, 10) : '',
+    owner: row.owner?.full_name || '',
+  };
+}
+
+export async function fetchLeads() {
+  if (!supabaseEnabled) return null;
+  const { data, error } = await supabase.from('leads').select('id, full_name, phone, source, desired_level, stage, next_follow_up_at, owner:profiles(full_name)').order('created_at', { ascending: false });
+  if (error) { console.error('fetchLeads failed:', error.message); return null; }
+  return data.map(rowToLead);
+}
+
+export async function insertLead(form) {
+  if (!supabaseEnabled) return null;
+  const payload = {
+    full_name: form.name,
+    phone: form.phone || null,
+    source: form.source || null,
+    desired_level: form.level || null,
+    stage: 'new',
+    next_follow_up_at: form.next || null,
+    owner_id: form.ownerId || null,
+  };
+  const { data, error } = await supabase.from('leads').insert(payload).select('id, full_name, phone, source, desired_level, stage, next_follow_up_at, owner:profiles(full_name)').single();
+  if (error) { console.error('insertLead failed:', error.message); return null; }
+  return rowToLead(data);
+}
+
+export async function updateLeadStage(id, stage) {
+  if (!supabaseEnabled) return false;
+  const { error } = await supabase.from('leads').update({ stage }).eq('id', id);
+  if (error) { console.error('updateLeadStage failed:', error.message); return false; }
+  return true;
 }
