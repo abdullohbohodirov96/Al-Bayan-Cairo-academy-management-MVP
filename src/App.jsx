@@ -368,7 +368,7 @@ export default function App() {
         {page === 'reminders' && allowedPages.includes('reminders') && (
           <Reminders students={students} rules={rules} setRules={setRules} messageLog={messageLog} sendReminder={sendReminder} groups={groups} locale={locale} />
         )}
-        {page === 'analytics' && allowedPages.includes('analytics') && <Analytics stats={stats} students={students} leads={leads} locale={locale} />}
+        {page === 'analytics' && allowedPages.includes('analytics') && <Analytics stats={stats} students={students} leads={leads} branches={branches} locale={locale} />}
         {page === 'staff' && allowedPages.includes('staff') && <Staff locale={locale} onStaffChanged={refreshTeachers} />}
         {page === 'settings' && allowedPages.includes('settings') && (
           <SettingsPage account={account} locale={locale} setLocale={setLocale} onLogout={handleLogout} branches={branches} onSaveBranch={saveBranch} onDeleteBranch={deleteBranch} />
