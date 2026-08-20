@@ -330,7 +330,7 @@ export default function App() {
         {page === 'schedule' && allowedPages.includes('schedule') && <Schedule lessons={seedLessons} />}
         {page === 'leads' && allowedPages.includes('leads') && <Leads leads={leads} setLeads={setLeads} locale={locale} onAddLead={addLead} />}
         {page === 'reminders' && allowedPages.includes('reminders') && (
-          <Reminders students={students} rules={rules} setRules={setRules} messageLog={messageLog} sendReminder={sendReminder} locale={locale} />
+          <Reminders students={students} rules={rules} setRules={setRules} messageLog={messageLog} sendReminder={sendReminder} groups={groups} locale={locale} />
         )}
         {page === 'analytics' && allowedPages.includes('analytics') && <Analytics stats={stats} students={students} leads={leads} locale={locale} />}
         {page === 'settings' && allowedPages.includes('settings') && (

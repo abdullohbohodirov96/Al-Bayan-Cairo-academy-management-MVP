@@ -25,8 +25,7 @@ export async function upsertBranch(id, form) {
   return data;
 }
 
-export async function deleteBranchRemote(id) {
-  if (!supabaseEnabled) return false;
+export async function deleteBranchRemote(id) {  if (!supabaseEnabled) return false;
   const { error } = await supabase.from('branches').delete().eq('id', id);
   if (error) { console.error('deleteBranch failed:', error.message); return false; }
   return true;
@@ -170,4 +169,20 @@ export async function updateLeadStage(id, stage) {
   const { error } = await supabase.from('leads').update({ stage }).eq('id', id);
   if (error) { console.error('updateLeadStage failed:', error.message); return false; }
   return true;
+}
+
+// --- Telegram broadcast -----------------------------------------------
+// Calls the telegram-send Edge Function (service-role only — the bot token
+// never reaches the browser). Only works for groups that already have a
+// telegram_chat_id (i.e. the bot has been added to that Telegram group and
+// matched it via group_code).
+
+export async function sendTelegramMessage(groupId, message) {
+  if (!supabaseEnabled) return { ok: false, error: 'Supabase ulanmagan' };
+  const { data, error } = await supabase.functions.invoke('telegram-send', {
+    body: { group_id: groupId, message },
+  });
+  if (error) return { ok: false, error: error.message || 'Xabar yuborishda xatolik' };
+  if (data && data.ok === false) return { ok: false, error: data.error || 'Xabar yuborishda xatolik' };
+  return { ok: true, sentTo: data?.sent_to };
 }
