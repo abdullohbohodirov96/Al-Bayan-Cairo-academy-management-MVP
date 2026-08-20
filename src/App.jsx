@@ -19,6 +19,7 @@ import { Leads } from './pages/Leads.jsx';
 import { Reminders } from './pages/Reminders.jsx';
 import { Analytics } from './pages/Analytics.jsx';
 import { SettingsPage } from './pages/Settings.jsx';
+import { Staff } from './pages/Staff.jsx';
 
 import { seedStudents, seedTeachers, seedGroups, seedLessons, seedLeads, seedBranches, reminderRules as seedRules } from './data.js';
 import { isPrefixMatch } from './search.js';
@@ -333,6 +334,7 @@ export default function App() {
           <Reminders students={students} rules={rules} setRules={setRules} messageLog={messageLog} sendReminder={sendReminder} groups={groups} locale={locale} />
         )}
         {page === 'analytics' && allowedPages.includes('analytics') && <Analytics stats={stats} students={students} leads={leads} locale={locale} />}
+        {page === 'staff' && allowedPages.includes('staff') && <Staff locale={locale} />}
         {page === 'settings' && allowedPages.includes('settings') && (
           <SettingsPage account={account} locale={locale} setLocale={setLocale} onLogout={handleLogout} branches={branches} onSaveBranch={saveBranch} onDeleteBranch={deleteBranch} />
         )}

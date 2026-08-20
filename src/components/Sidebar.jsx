@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, WalletCards, Layers, GraduationCap, UserCheck,
-  CalendarClock, Target, BellRing, BarChart3, Settings, PanelLeftClose, PanelLeftOpen,
+  CalendarClock, Target, BellRing, BarChart3, Settings, PanelLeftClose, PanelLeftOpen, UserCog,
 } from 'lucide-react';
 import { LogoMark } from './LogoMark.jsx';
 import { tr } from '../i18n.js';
@@ -50,6 +50,12 @@ export function Sidebar({ page, setPage, locale, allowedPages, railMode, setRail
           {allowedPages.includes('settings') && (
             <>
               <div className="navlabel">{tr(locale, 'navSystem')}</div>
+              {allowedPages.includes('staff') && (
+                <button className={'navitem' + (page === 'staff' ? ' active' : '')} onClick={() => { setPage('staff'); setMobileOpen(false); }}>
+                  <UserCog size={18} />
+                  <span>{tr(locale, 'staff')}</span>
+                </button>
+              )}
               <button className={'navitem' + (page === 'settings' ? ' active' : '')} onClick={() => { setPage('settings'); setMobileOpen(false); }}>
                 <Settings size={18} />
                 <span>{tr(locale, 'settings')}</span>

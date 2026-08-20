@@ -6,7 +6,7 @@ export const accounts = [
 
 // Which nav pages each role can open. Order here defines nav order.
 export const rolePages = {
-  ceo: ['overview', 'students', 'payments', 'groups', 'teachers', 'attendance', 'schedule', 'leads', 'reminders', 'analytics', 'settings'],
+  ceo: ['overview', 'students', 'payments', 'groups', 'teachers', 'attendance', 'schedule', 'leads', 'reminders', 'analytics', 'staff', 'settings'],
   admin: ['overview', 'students', 'payments', 'groups', 'teachers', 'attendance', 'schedule', 'leads', 'reminders', 'settings'],
   teacher: ['overview', 'students', 'attendance', 'schedule'],
 };

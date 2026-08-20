@@ -186,3 +186,22 @@ export async function sendTelegramMessage(groupId, message) {
   if (data && data.ok === false) return { ok: false, error: data.error || 'Xabar yuborishda xatolik' };
   return { ok: true, sentTo: data?.sent_to };
 }
+
+// --- Staff accounts (CEO only) ------------------------------------------
+// All calls go through the manage-staff Edge Function, which checks the
+// caller is a CEO and does the actual Auth admin work with the service-role
+// key — the browser never sees that key.
+
+async function callManageStaff(payload) {
+  if (!supabaseEnabled) return { ok: false, error: 'Supabase ulanmagan' };
+  const { data, error } = await supabase.functions.invoke('manage-staff', { body: payload });
+  if (error) return { ok: false, error: error.message || 'Server xatosi' };
+  return data;
+}
+
+export const listStaff = () => callManageStaff({ action: 'list' });
+export const createStaff = (fields) => callManageStaff({ action: 'create', ...fields });
+export const updateStaffProfile = (user_id, fields) => callManageStaff({ action: 'update_profile', user_id, ...fields });
+export const resetStaffPassword = (user_id, password) => callManageStaff({ action: 'reset_password', user_id, password });
+export const setStaffActive = (user_id, is_active) => callManageStaff({ action: 'set_active', user_id, is_active });
+export const deleteStaff = (user_id) => callManageStaff({ action: 'delete', user_id });
