@@ -22,7 +22,7 @@ import { SettingsPage } from './pages/Settings.jsx';
 
 import { seedStudents, seedTeachers, seedGroups, seedLessons, seedLeads, seedBranches, reminderRules as seedRules } from './data.js';
 import { isPrefixMatch } from './search.js';
-import { initials, todayISO } from './utils.js';
+import { initials, todayISO, addMonths } from './utils.js';
 import { rolePages, roleCanEdit, defaultPageFor } from './roles.js';
 import { supabase, supabaseEnabled } from './supabaseClient.js';
 import { fetchBranches, upsertBranch, deleteBranchRemote, fetchGroups, upsertGroup, fetchTeachers, upsertTeacher, fetchLeads, insertLead } from './dataService.js';
@@ -49,6 +49,8 @@ export default function App() {
   ]);
   const [modal, setModal] = useState(null);
   const [selected, setSelected] = useState(null);
+  const [prefillGroup, setPrefillGroup] = useState(null);
+  const [payModalStudent, setPayModalStudent] = useState(null);
   const [toast, setToast] = useState('');
 
   // Real Supabase Auth session — replaces the demo account-picker whenever
@@ -143,14 +145,33 @@ export default function App() {
     };
     setStudents(v => [s, ...v]);
     setModal(null);
+    setPrefillGroup(null);
     setToast('Карточка ученика создана');
   }
 
+  function addStudentToGroup(group) {
+    setPrefillGroup({ group: group.name, teacher: group.teacher, branch: group.branch, level: group.level });
+    setModal('add');
+  }
+
   function togglePay(id) {
+    const student = students.find(s => s.id === id);
+    if (!student) return;
+    if (student.paid) {
+      // Un-marking a payment is a plain revert, no date needed.
+      setStudents(v => v.map(s => s.id === id ? { ...s, paid: false, paidAmount: 0, status: 'overdue' } : s));
+      setToast('Статус оплаты обновлён');
+      return;
+    }
+    setPayModalStudent(student);
+  }
+
+  function confirmPayment(id, paidDate) {
     setStudents(v => v.map(s => s.id === id
-      ? { ...s, paid: !s.paid, paidAmount: !s.paid ? s.fee : 0, status: !s.paid ? 'active' : 'overdue' }
+      ? { ...s, paid: true, paidAmount: s.fee, status: 'active', paidAt: paidDate, due: addMonths(paidDate, 1) }
       : s));
-    setToast('Статус оплаты обновлён');
+    setPayModalStudent(null);
+    setToast('Тўлов қайд этилди, кейинги тўлов санаси автоматик ҳисобланди');
   }
 
   function sendReminder(student, type = 'Ручное напоминание') {
@@ -300,7 +321,7 @@ export default function App() {
           <Payments students={filteredStudents} togglePay={togglePay} sendReminder={sendReminder} locale={locale} />
         )}
         {page === 'groups' && allowedPages.includes('groups') && (
-          <Groups groups={groups} teachers={teachers} branches={branches} canManage={canManage} locale={locale} onSaveGroup={saveGroup} />
+          <Groups groups={groups} teachers={teachers} branches={branches} canManage={canManage} locale={locale} onSaveGroup={saveGroup} onAddStudentToGroup={addStudentToGroup} />
         )}
         {page === 'teachers' && allowedPages.includes('teachers') && <Teachers teachers={teachers} canManage={canManage} locale={locale} onSaveTeacher={saveTeacher} />}
         {page === 'attendance' && allowedPages.includes('attendance') && (
@@ -325,13 +346,33 @@ export default function App() {
       {modal === 'add' && canManage && (
         <Modal
           title="Новый ученик"
-          onClose={() => setModal(null)}
+          onClose={() => { setModal(null); setPrefillGroup(null); }}
           footer={<>
-            <button className="btn btn-ghost" onClick={() => setModal(null)}>Отмена</button>
+            <button className="btn btn-ghost" onClick={() => { setModal(null); setPrefillGroup(null); }}>Отмена</button>
             <button className="btn btn-primary" type="submit" form="add-student-form">Создать</button>
           </>}
         >
-          <AddStudentForm onSubmit={addStudent} branches={branches} />
+          <AddStudentForm onSubmit={addStudent} branches={branches} prefill={prefillGroup} />
+        </Modal>
+      )}
+
+      {payModalStudent && (
+        <Modal title="Тўловни қайд этиш" onClose={() => setPayModalStudent(null)}>
+          <form onSubmit={e => { e.preventDefault(); const f = new FormData(e.currentTarget); confirmPayment(payModalStudent.id, f.get('paidAt')); }}>
+            <p style={{ fontSize: 13, color: 'var(--ink-soft)', marginBottom: 12 }}>
+              <b>{payModalStudent.name}</b> — {payModalStudent.group}
+            </p>
+            <label className="field">Тўлов санаси
+              <input name="paidAt" type="date" required defaultValue={todayISO()} />
+            </label>
+            <p style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 8 }}>
+              Кейинги тўлов санаси автоматик +1 ойга ҳисобланади.
+            </p>
+            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+              <button type="submit" className="btn btn-primary btn-sm">Сақлаш</button>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setPayModalStudent(null)}>Отмена</button>
+            </div>
+          </form>
         </Modal>
       )}
 

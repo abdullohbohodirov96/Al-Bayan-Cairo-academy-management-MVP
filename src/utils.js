@@ -13,6 +13,11 @@ export function dayDiff(iso, todayIso) {
 export function todayISO() {
   return '2026-08-19';
 }
+export function addMonths(iso, n) {
+  const d = new Date(iso + 'T00:00:00');
+  d.setMonth(d.getMonth() + n);
+  return d.toISOString().slice(0, 10);
+}
 export function initials(name = '') {
   return name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 }

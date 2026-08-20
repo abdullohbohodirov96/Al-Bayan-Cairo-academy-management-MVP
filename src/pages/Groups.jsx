@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Building2, Phone, Pencil, MessageCircle } from 'lucide-react';
+import { Plus, Building2, Phone, Pencil, MessageCircle, UserPlus } from 'lucide-react';
 import { PageHead, Progress, Modal } from '../components/UI.jsx';
 import { tr, formatSchedule, weekDays } from '../i18n.js';
 
@@ -55,7 +55,7 @@ function GroupForm({ initial, teachers, branches, locale, onSubmit, onCancel }) 
   );
 }
 
-export function Groups({ groups, teachers = [], branches = [], canManage = true, locale = 'ru', onSaveGroup }) {
+export function Groups({ groups, teachers = [], branches = [], canManage = true, locale = 'ru', onSaveGroup, onAddStudentToGroup }) {
   const [modal, setModal] = useState(null); // null | 'new' | group id
 
   const editingGroup = typeof modal === 'string' && modal !== 'new' ? groups.find(g => g.id === modal) : null;
@@ -91,6 +91,11 @@ export function Groups({ groups, teachers = [], branches = [], canManage = true,
                 <b>{g.students}/{g.capacity} мест</b>
               </div>
               <Progress value={pct} label={`${pct}% заполнено`} />
+              {canManage && onAddStudentToGroup && (
+                <button className="btn btn-ghost btn-sm btn-full" style={{ marginTop: 10 }} onClick={() => onAddStudentToGroup(g)}>
+                  <UserPlus size={14} /> O‘quvchi qo‘shish
+                </button>
+              )}
             </div>
           );
         })}
