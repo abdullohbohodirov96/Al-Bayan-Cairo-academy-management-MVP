@@ -33,7 +33,7 @@ export function Reminders({ students, rules, setRules, messageLog, sendReminder,
 
   return (
     <section className="content">
-      <PageHead title={tr(locale, 'reminders')} sub="Правила, очередь, шаблоны и журнал отправки">
+      <PageHead title={tr(locale, 'reminders')} sub={tr(locale, 'subReminders')}>
         <span className="provider"><span /> Провайдер не подключён</span>
       </PageHead>
       <div className="remindergrid">

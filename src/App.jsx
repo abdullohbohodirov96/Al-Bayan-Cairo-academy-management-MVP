@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
+import { tr } from './i18n.js';
 
 import { Sidebar } from './components/Sidebar.jsx';
 import { Topbar } from './components/Topbar.jsx';
@@ -363,7 +364,7 @@ export default function App() {
         {page === 'attendance' && allowedPages.includes('attendance') && (
           <Attendance students={scopedStudents} groups={groups} account={account} locale={locale} onSaveAttendance={saveAttendance} />
         )}
-        {page === 'schedule' && allowedPages.includes('schedule') && <Schedule lessons={seedLessons} />}
+        {page === 'schedule' && allowedPages.includes('schedule') && <Schedule lessons={seedLessons} locale={locale} />}
         {page === 'leads' && allowedPages.includes('leads') && <Leads leads={leads} setLeads={setLeads} locale={locale} onAddLead={addLead} />}
         {page === 'reminders' && allowedPages.includes('reminders') && (
           <Reminders students={students} rules={rules} setRules={setRules} messageLog={messageLog} sendReminder={sendReminder} groups={groups} locale={locale} />
@@ -414,22 +415,22 @@ export default function App() {
       )}
 
       {assignModalGroup && (
-        <Modal title={`«${assignModalGroup.name}» гуруҳига биriктириш`} onClose={() => setAssignModalGroup(null)}>
+        <Modal title={`${tr(locale, 'assignToGroupTitle')} — ${assignModalGroup.name}`} onClose={() => setAssignModalGroup(null)}>
           {(() => {
             const ungrouped = students.filter(s => !s.group);
             if (ungrouped.length === 0) {
-              return <p style={{ fontSize: 13, color: 'var(--ink-faint)' }}>Гуруҳсиз ўқувчилар йўқ. Аввал "Янги" тугмаси орқали яратинг ёки бошқа ўқувчини гуруҳдан бўшатинг.</p>;
+              return <p style={{ fontSize: 13, color: 'var(--ink-faint)' }}>{tr(locale, 'noUngrouped')}</p>;
             }
             return (
               <form onSubmit={e => { e.preventDefault(); const f = new FormData(e.currentTarget); confirmAssign(f.get('studentId'), assignModalGroup); }}>
-                <label className="field">Ўқувчи
+                <label className="field">{tr(locale, 'pickStudent')}
                   <select name="studentId" required>
                     {ungrouped.map(s => <option key={s.id} value={s.id}>{s.name} · {s.phone}</option>)}
                   </select>
                 </label>
                 <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                  <button type="submit" className="btn btn-primary btn-sm">Бириктириш</button>
-                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => setAssignModalGroup(null)}>Отмена</button>
+                  <button type="submit" className="btn btn-primary btn-sm">{tr(locale, 'attach')}</button>
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => setAssignModalGroup(null)}>{tr(locale, 'cancel')}</button>
                 </div>
               </form>
             );

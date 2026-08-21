@@ -12,7 +12,7 @@ export function Payments({ students, togglePay, sendReminder, locale = 'ru' }) {
 
   return (
     <section className="content">
-      <PageHead title={tr(locale, 'payments')} sub="Ежемесячные начисления, частичные оплаты и напоминания" />
+      <PageHead title={tr(locale, 'payments')} sub={tr(locale, 'subPayments')} />
 
       <div className="statgrid">
         <StatCard icon={WalletCards} value={money(collected)} label="Собрано по выборке" />

@@ -62,7 +62,7 @@ export function Groups({ groups, teachers = [], branches = [], students = [], ca
 
   return (
     <section className="content">
-      <PageHead title={tr(locale, 'groups')} sub="Нагрузка, вместимость, преподаватели и аудитории">
+      <PageHead title={tr(locale, 'groups')} sub={tr(locale, 'subGroups')}>
         {canManage && <button className="btn btn-primary" onClick={() => setModal('new')}><Plus size={16} /> {tr(locale, 'addGroup')}</button>}
       </PageHead>
       <div className="cardgrid">
@@ -85,14 +85,14 @@ export function Groups({ groups, teachers = [], branches = [], students = [], ca
               <p>{g.teacher} · {formatSchedule(g.days, g.time, locale)}</p>
               {g.groupCode && (
                 <div className={'chip' + (g.telegramChatId ? ' chip-ok' : '')} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginBottom: 8 }}>
-                  <MessageCircle size={12} /> {g.groupCode}{g.telegramChatId ? '' : ' · bot kutilmoqda'}
+                  <MessageCircle size={12} /> {g.groupCode}{g.telegramChatId ? ` · ${tr(locale, 'botLinked')}` : ` · ${tr(locale, 'botPending')}`}
                 </div>
               )}
               <div className="groupmeta">
                 <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Building2 size={13} /> {g.room}</span>
-                <b>{enrolled}/{g.capacity} мест</b>
+                <b>{enrolled}/{g.capacity} {tr(locale, 'seats')}</b>
               </div>
-              <Progress value={pct} label={`${pct}% заполнено`} />
+              <Progress value={pct} label={`${pct}% ${tr(locale, 'filled')}`} />
               {enrolled > 0 && (
                 <div style={{ fontSize: 11.5, color: 'var(--ink-faint)', marginTop: 8 }}>
                   {roster.slice(0, 3).map(s => s.name).join(', ')}{enrolled > 3 ? ` +${enrolled - 3}` : ''}
@@ -101,11 +101,11 @@ export function Groups({ groups, teachers = [], branches = [], students = [], ca
               {canManage && onAddStudentToGroup && (
                 <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
                   <button className="btn btn-ghost btn-sm" style={{ flex: 1 }} onClick={() => onAddStudentToGroup(g)}>
-                    <UserPlus size={14} /> Янги
+                    <UserPlus size={14} /> {tr(locale, 'newStudentBtn')}
                   </button>
                   {onAssignStudentToGroup && (
                     <button className="btn btn-ghost btn-sm" style={{ flex: 1 }} onClick={() => onAssignStudentToGroup(g)}>
-                      <UserPlus size={14} /> Мавжуддан
+                      <UserPlus size={14} /> {tr(locale, 'assignExistingBtn')}
                     </button>
                   )}
                 </div>
@@ -164,7 +164,7 @@ export function Teachers({ teachers, canManage = true, locale = 'ru', onSaveTeac
 
   return (
     <section className="content">
-      <PageHead title={tr(locale, 'teachers')} sub="Группы, нагрузка, специализация и контакты">
+      <PageHead title={tr(locale, 'teachers')} sub={tr(locale, 'subTeachers')}>
         {canManage && <button className="btn btn-primary" onClick={() => setModal('new')}><Plus size={16} /> Добавить преподавателя</button>}
       </PageHead>
       <div className="cardgrid">
@@ -195,7 +195,7 @@ export function Teachers({ teachers, canManage = true, locale = 'ru', onSaveTeac
       </div>
 
       {modal && (
-        <Modal title={modal === 'new' ? 'Янги преподаватель' : 'Ўзгартириш'} onClose={() => setModal(null)}>
+        <Modal title={modal === 'new' ? tr(locale, 'newTeacherTitle') : tr(locale, 'editItem')} onClose={() => setModal(null)}>
           <TeacherForm
             initial={editingTeacher}
             locale={locale}

@@ -1,12 +1,13 @@
 import { Plus, CalendarClock, CheckCircle2 } from 'lucide-react';
 import { PageHead } from '../components/UI.jsx';
 import { shortDate } from '../utils.js';
+import { tr } from '../i18n.js';
 
-export function Schedule({ lessons }) {
+export function Schedule({ lessons, locale = 'ru' }) {
   const dates = [...new Set(lessons.map(x => x.date))];
   return (
     <section className="content">
-      <PageHead title="Расписание" sub="Уроки, аудитории и конфликты">
+      <PageHead title={tr(locale, 'schedulePageTitle')} sub={tr(locale, 'subSchedule')}>
         <button className="btn btn-primary"><Plus size={16} /> Новый урок</button>
       </PageHead>
       <div className="card">

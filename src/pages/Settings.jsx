@@ -8,7 +8,7 @@ export function SettingsPage({ account, locale, setLocale, onLogout, branches = 
   const [showBranches, setShowBranches] = useState(false);
   return (
     <section className="content">
-      <PageHead title={tr(locale, 'settings')} sub="Аккаунт, язык интерфейса и интеграции" />
+      <PageHead title={tr(locale, 'settings')} sub={tr(locale, 'subSettings')} />
       <div className="settingsgrid">
         <div className="card">
           <div className="cardhead"><div><h3>Организация</h3><p>Базовые параметры центра</p></div><Building2 size={17} /></div>

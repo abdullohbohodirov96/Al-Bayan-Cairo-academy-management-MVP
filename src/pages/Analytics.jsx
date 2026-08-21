@@ -13,7 +13,7 @@ export function Analytics({ stats, students, leads, branches = [], locale = 'ru'
 
   return (
     <section className="content">
-      <PageHead title={tr(locale, 'analytics')} sub="Финансы, академика и воронка набора" />
+      <PageHead title={tr(locale, 'analytics')} sub={tr(locale, 'subAnalytics')} />
       <div className="analyticgrid">
         <div className="card">
           <div className="cardhead"><div><h3>Ученики по уровням</h3><p>Текущая структура центра</p></div></div>

@@ -34,7 +34,7 @@ export function Attendance({ students, groups = [], account, locale = 'ru', onSa
 
   return (
     <section className="content">
-      <PageHead title={tr(locale, 'attendance')} sub="Отметка за урок — без отдельной тяжёлой LMS">
+      <PageHead title={tr(locale, 'attendance')} sub={tr(locale, 'subAttendance')}>
         <div className="datebadge"><CalendarDays size={15} /> 19 августа 2026</div>
       </PageHead>
 

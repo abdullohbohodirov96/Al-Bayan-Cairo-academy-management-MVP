@@ -53,7 +53,7 @@ export function Leads({ leads, setLeads, locale = 'ru', onAddLead }) {
 
   return (
     <section className="content">
-      <PageHead title={tr(locale, 'leads')} sub="От заявки до записи в группу">
+      <PageHead title={tr(locale, 'leads')} sub={tr(locale, 'subLeads')}>
         <button className="btn btn-primary" onClick={() => setModal(true)}><Plus size={16} /> Новый лид</button>
       </PageHead>
       <div className="pipeline">

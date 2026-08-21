@@ -17,7 +17,7 @@ export function Students({ students, query, setModal, setSelected, togglePay, se
 
   return (
     <section className="content">
-      <PageHead title={tr(locale, 'students')} sub={canManage ? 'Карточки, группы, оплаты, посещаемость и контакты' : 'Ваши группы: карточки и посещаемость'}>
+      <PageHead title={tr(locale, 'students')} sub={canManage ? tr(locale, 'subStudentsManage') : tr(locale, 'subStudentsTeacher')}>
         {canManage && <button className="btn btn-primary" onClick={() => setModal('add')}><Plus size={16} /> Добавить ученика</button>}
       </PageHead>
 

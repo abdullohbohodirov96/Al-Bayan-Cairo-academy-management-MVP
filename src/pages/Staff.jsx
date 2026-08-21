@@ -145,7 +145,7 @@ export function Staff({ locale = 'ru', onStaffChanged }) {
 
   return (
     <section className="content">
-      <PageHead title="Xodimlar" sub="Ustoz va admin login/parollarini shu yerdan boshqaring">
+      <PageHead title={tr(locale, 'staff')} sub={tr(locale, 'subStaff')}>
         <button className="btn btn-primary" onClick={() => setModal('new')}><Plus size={16} /> Yangi hisob</button>
       </PageHead>
 
