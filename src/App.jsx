@@ -390,7 +390,7 @@ export default function App() {
             <button className="btn btn-primary" type="submit" form="add-student-form">Создать</button>
           </>}
         >
-          <AddStudentForm onSubmit={addStudent} branches={branches} groups={groups} prefill={prefillGroup} />
+          <AddStudentForm onSubmit={addStudent} branches={branches} groups={groups} teachers={teachers} prefill={prefillGroup} locale={locale} />
         </Modal>
       )}
 

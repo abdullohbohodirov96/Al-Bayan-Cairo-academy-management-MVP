@@ -1,9 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { tr } from '../i18n.js';
 
-export function AddStudentForm({ onSubmit, branches = [], groups = [], prefill }) {
+export function AddStudentForm({ onSubmit, branches = [], groups = [], teachers = [], prefill, locale = 'ru' }) {
   const locked = Boolean(prefill?.group);
+
   const [groupName, setGroupName] = useState(prefill?.group || '');
+  const [teacherName, setTeacherName] = useState(prefill?.teacher || '');
+
   const activeGroup = groups.find(g => g.name === groupName) || (locked ? prefill : null);
+
+  // Picking a group whose teacher is already known locks the teacher field
+  // to match it (a group only has one teacher). Picking a teacher instead
+  // narrows the group list down to that teacher's own groups.
+  useEffect(() => {
+    if (locked) return;
+    if (activeGroup?.teacher) setTeacherName(activeGroup.teacher);
+  }, [groupName]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function onTeacherChange(name) {
+    setTeacherName(name);
+    // If the currently chosen group belongs to someone else, clear it so
+    // the two selections never disagree.
+    if (activeGroup && activeGroup.teacher && activeGroup.teacher !== name) setGroupName('');
+  }
+
+  const groupOptions = teacherName ? groups.filter(g => !g.teacher || g.teacher === teacherName) : groups;
+  const teacherLocked = Boolean(activeGroup?.teacher);
 
   return (
     <form id="add-student-form" onSubmit={onSubmit}>
@@ -17,36 +39,43 @@ export function AddStudentForm({ onSubmit, branches = [], groups = [], prefill }
         <label className="field">Родитель / контакт
           <input name="parent" placeholder="ФИО родителя" />
         </label>
+
+        <label className="field">{tr(locale, 'teacher')}
+          {locked ? (
+            <input readOnly defaultValue={prefill.teacher} />
+          ) : (
+            <select value={teacherName} onChange={e => onTeacherChange(e.target.value)} disabled={teacherLocked}>
+              <option value="">— танланмаган —</option>
+              {teachers.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
+            </select>
+          )}
+          <input type="hidden" name="teacher" value={locked ? prefill.teacher : teacherName} />
+        </label>
+
         <label className="field">Группа
           {locked ? (
-            <input name="group" required defaultValue={prefill.group} readOnly />
+            <input readOnly defaultValue={prefill.group} />
           ) : (
-            <select name="group" value={groupName} onChange={e => setGroupName(e.target.value)}>
+            <select value={groupName} onChange={e => setGroupName(e.target.value)}>
               <option value="">— Гуруҳсиз (кейин бириктирилади) —</option>
-              {groups.map(g => <option key={g.id} value={g.name}>{g.name}</option>)}
+              {groupOptions.map(g => <option key={g.id} value={g.name}>{g.name}{g.teacher ? '' : ' · устоз йўқ'}</option>)}
+            </select>
+          )}
+          <input type="hidden" name="group" value={locked ? prefill.group : groupName} />
+        </label>
+
+        <label className="field">{tr(locale, 'level')}
+          {activeGroup?.level ? (
+            <>
+              <input readOnly value={activeGroup.level} onChange={() => {}} />
+              <input type="hidden" name="level" value={activeGroup.level} />
+            </>
+          ) : (
+            <select name="level" defaultValue="A1">
+              <option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option>
             </select>
           )}
         </label>
-
-        {activeGroup ? (
-          <>
-            <input type="hidden" name="level" value={activeGroup.level || ''} />
-            <label className="field">Уровень<input readOnly value={activeGroup.level || ''} onChange={() => {}} /></label>
-            <input type="hidden" name="teacher" value={activeGroup.teacher || ''} />
-            <label className="field">Преподаватель<input readOnly value={activeGroup.teacher || ''} onChange={() => {}} /></label>
-          </>
-        ) : (
-          <>
-            <label className="field">Уровень
-              <select name="level" defaultValue="A1">
-                <option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option>
-              </select>
-            </label>
-            <label className="field">Преподаватель
-              <input name="teacher" placeholder="Гуруҳ танлансангиз автоматик тўлади" />
-            </label>
-          </>
-        )}
 
         <label className="field">Ежемесячная оплата
           <input name="fee" type="number" required defaultValue={450000} />
@@ -57,8 +86,8 @@ export function AddStudentForm({ onSubmit, branches = [], groups = [], prefill }
         <label className="field">Филиал
           {activeGroup?.branch ? (
             <>
-              <input type="hidden" name="branch" value={activeGroup.branch} />
               <input readOnly value={activeGroup.branch} onChange={() => {}} />
+              <input type="hidden" name="branch" value={activeGroup.branch} />
             </>
           ) : (
             <select name="branch" defaultValue={branches[0]?.name}>

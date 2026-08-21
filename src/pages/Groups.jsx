@@ -18,7 +18,8 @@ function GroupForm({ initial, teachers, branches, locale, onSubmit, onCancel }) 
           </select>
         </label>
         <label className="field">{tr(locale, 'teacher')}
-          <select name="teacher" defaultValue={initial?.teacher}>
+          <select name="teacher" required defaultValue={initial?.teacher || ''}>
+            <option value="" disabled>— танланг —</option>
             {teachers.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
           </select>
         </label>
