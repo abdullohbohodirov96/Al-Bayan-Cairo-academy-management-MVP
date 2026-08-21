@@ -39,7 +39,7 @@ export function Analytics({ stats, students, leads, branches = [], locale = 'ru'
           <div className="cardhead"><div><h3>Ключевые метрики</h3><p>Для руководителя</p></div></div>
           <div className="metriclist">
             <div><span>Средняя посещаемость</span><b>{stats.attendance}%</b></div>
-            <div><span>Дебиторка</span><b>{money(stats.due)}</b></div>
+            <div><span>Дебиторка</span><b>{money(stats.due, locale)}</b></div>
             <div><span>Конверсия лидов</span><b>{leads.length ? Math.round((leadWon / leads.length) * 100) : 0}%</b></div>
             <div><span>ARPU</span><b>{money(stats.total ? Math.round(stats.revenue / stats.total) : 0)}</b></div>
           </div>
@@ -60,8 +60,8 @@ export function Analytics({ stats, students, leads, branches = [], locale = 'ru'
                       <tr key={b.id}>
                         <td><b>{b.name}</b></td>
                         <td>{bs.length}</td>
-                        <td className="mono">{money(revenue)}</td>
-                        <td className="mono" style={{ color: due > 0 ? 'var(--brick)' : undefined }}>{money(due)}</td>
+                        <td className="mono">{money(revenue, locale)}</td>
+                        <td className="mono" style={{ color: due > 0 ? 'var(--brick)' : undefined }}>{money(due, locale)}</td>
                       </tr>
                     );
                   })}
@@ -85,12 +85,12 @@ export function Analytics({ stats, students, leads, branches = [], locale = 'ru'
                       <td><div className="person"><Avatar s={s} /><div><b>{s.name}</b><span>{s.id} · {s.phone}</span></div></div></td>
                       <td>{s.group || '—'}</td>
                       <td>
-                        <b className="mono">{shortDate(s.due)}</b><br />
+                        <b className="mono">{shortDate(s.due, locale)}</b><br />
                         <span style={{ fontSize: 11.5, color: s.overdueDays > 0 ? 'var(--brick)' : 'var(--ink-faint)' }}>
                           {s.overdueDays > 0 ? `${s.overdueDays} кун ўтди` : 'муддати келмаган'}
                         </span>
                       </td>
-                      <td className="mono" style={{ color: 'var(--brick)' }}>{money(s.fee - s.paidAmount)}</td>
+                      <td className="mono" style={{ color: 'var(--brick)' }}>{money(s.fee - s.paidAmount, locale)}</td>
                     </tr>
                   ))}
                 </tbody>

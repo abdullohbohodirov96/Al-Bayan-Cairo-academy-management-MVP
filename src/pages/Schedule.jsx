@@ -17,7 +17,7 @@ export function Schedule({ lessons, locale = 'ru' }) {
         </div>
         {dates.map(date => (
           <div className="dayblock" key={date}>
-            <div className="daylabel"><b>{shortDate(date)}</b><span>{lessons.filter(x => x.date === date).length} занятия</span></div>
+            <div className="daylabel"><b>{shortDate(date, locale)}</b><span>{lessons.filter(x => x.date === date).length} занятия</span></div>
             <div>
               {lessons.filter(x => x.date === date).map(l => (
                 <div className="slot" key={l.id}>

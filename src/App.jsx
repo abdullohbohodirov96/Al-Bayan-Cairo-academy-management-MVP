@@ -62,8 +62,20 @@ export default function App() {
   useEffect(() => {
     if (!supabaseEnabled) return;
 
-    async function loadProfile(user, isFreshSignIn) {
-      if (!user) { setAccount(null); setAuthChecked(true); return; }
+    // Supabase's client can re-fire a 'SIGNED_IN' event on background token
+    // refreshes AND on tab-focus/visibility changes — not just on an actual
+    // login. Relying on the event name alone was still resetting people
+    // back to Overview mid-work. Instead we track which user id we've
+    // already loaded and only treat it as a fresh sign-in when that
+    // actually changes (null -> someone, or person A -> person B).
+    let loadedUserId = null;
+
+    async function loadProfile(user) {
+      if (!user) { loadedUserId = null; setAccount(null); setAuthChecked(true); return; }
+
+      const isFreshSignIn = loadedUserId !== user.id;
+      if (!isFreshSignIn) return; // same person, nothing changed — ignore the event entirely
+
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('id, full_name, phone, role, avatar_url, is_active')
@@ -75,39 +87,32 @@ export default function App() {
         setAuthChecked(true);
         return;
       }
-      setAccount(prev => {
-        // Same person already loaded (e.g. a background token refresh) —
-        // keep the object stable so nothing downstream re-renders/resets.
-        if (prev && prev.id === profile.id) return prev;
-        return {
-          id: profile.id,
-          role: profile.role,
-          roleLabel: roleLabels[profile.role] || profile.role,
-          name: profile.full_name,
-          title: roleLabels[profile.role] || profile.role,
-          avatar: profile.avatar_url || initials(profile.full_name),
-        };
+
+      loadedUserId = user.id;
+      setAccount({
+        id: profile.id,
+        role: profile.role,
+        roleLabel: roleLabels[profile.role] || profile.role,
+        name: profile.full_name,
+        title: roleLabels[profile.role] || profile.role,
+        avatar: profile.avatar_url || initials(profile.full_name),
       });
       setAuthChecked(true);
-      // Only jump to the role's home page (and reload branches/groups) on an
-      // actual sign-in — not on every background token refresh, which
-      // otherwise silently kicked people back to Overview mid-work.
-      if (isFreshSignIn) {
-        setPage(defaultPageFor(profile.role));
-        const remoteBranches = await fetchBranches();
-        if (remoteBranches) setBranches(remoteBranches);
-        const remoteTeachers = await fetchTeachers();
-        if (remoteTeachers && remoteTeachers.length) setTeachers(remoteTeachers);
-        const remoteGroups = await fetchGroups();
-        if (remoteGroups && remoteGroups.length) setGroups(remoteGroups);
-        const remoteLeads = await fetchLeads();
-        if (remoteLeads) setLeads(remoteLeads);
-      }
+      setPage(defaultPageFor(profile.role));
+      const remoteBranches = await fetchBranches();
+      if (remoteBranches) setBranches(remoteBranches);
+      const remoteTeachers = await fetchTeachers();
+      if (remoteTeachers && remoteTeachers.length) setTeachers(remoteTeachers);
+      const remoteGroups = await fetchGroups();
+      if (remoteGroups && remoteGroups.length) setGroups(remoteGroups);
+      const remoteLeads = await fetchLeads();
+      if (remoteLeads) setLeads(remoteLeads);
     }
 
-    supabase.auth.getSession().then(({ data }) => loadProfile(data.session?.user, true));
+    supabase.auth.getSession().then(({ data }) => loadProfile(data.session?.user));
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      loadProfile(session?.user, event === 'SIGNED_IN');
+      if (event === 'SIGNED_OUT') { loadedUserId = null; setAccount(null); setAuthChecked(true); return; }
+      loadProfile(session?.user);
     });
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -448,6 +453,7 @@ export default function App() {
           branches={branches}
           onUpdateStudent={updateStudent}
           onDeleteStudent={deleteStudent}
+          locale={locale}
         />
       )}
 

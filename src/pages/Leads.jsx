@@ -66,7 +66,7 @@ export function Leads({ leads, setLeads, locale = 'ru', onAddLead }) {
                   <div className="avatar sm">{initials(l.name)}</div>
                   <div><b>{l.name}</b><span>{l.id} · {l.level}</span></div>
                 </div>
-                <p><Target size={13} />{l.source} · далее {shortDate(l.next)}</p>
+                <p><Target size={13} />{l.source} · далее {shortDate(l.next, locale)}</p>
                 <div className="leadfoot">
                   <span>{l.owner}</span>
                   {stage !== 'won' && <button onClick={() => advance(l.id)}>Дальше <ChevronRight size={13} /></button>}

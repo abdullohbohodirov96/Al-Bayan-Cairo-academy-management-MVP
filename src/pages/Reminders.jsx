@@ -12,7 +12,7 @@ export function Reminders({ students, rules, setRules, messageLog, sendReminder,
   const tpl = reminderTemplates.find(x => x.id === templateId);
   const body = tpl.body
     .replace('{{name}}', s.name)
-    .replace('{{amount}}', new Intl.NumberFormat('ru-RU').format(Math.max(0, s.fee - s.paidAmount)))
+    .replace('{{amount}}', new Intl.NumberFormat(locale === 'en' ? 'en-US' : 'ru-RU').format(Math.max(0, s.fee - s.paidAmount)))
     .replace('{{due_date}}', s.due);
 
   const linkedGroups = groups.filter(g => g.telegramChatId);

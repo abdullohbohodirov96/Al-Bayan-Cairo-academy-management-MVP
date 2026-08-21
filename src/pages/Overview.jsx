@@ -16,7 +16,7 @@ export function Overview({ stats, students, lessons, leads, setPage, sendReminde
   const summary = fill(tr(locale, canManage ? 'heroManage' : 'heroTeacher'), {
     total: canManage ? stats.total : students.length,
     attendance: stats.attendance,
-    due: money(stats.due),
+    due: money(stats.due, locale),
   });
 
   return (
@@ -31,9 +31,9 @@ export function Overview({ stats, students, lessons, leads, setPage, sendReminde
 
       <div className="statgrid">
         <StatCard icon={Users} value={students.length} label={tr(locale, canManage ? 'statActiveStudents' : 'statStudentsInGroups')} delta={canManage ? tr(locale, 'statMonthlyGrowth') : undefined} />
-        {canManage && <StatCard icon={WalletCards} tone="brass" value={money(stats.revenue)} label={tr(locale, 'statMonthlyRevenue')} delta="+8.2%" />}
+        {canManage && <StatCard icon={WalletCards} tone="brass" value={money(stats.revenue, locale)} label={tr(locale, 'statMonthlyRevenue')} delta="+8.2%" />}
         <StatCard icon={UserCheck} value={stats.attendance + '%'} label={tr(locale, 'statAvgAttendance')} />
-        {canManage && <StatCard icon={TrendingUp} tone="brick" value={money(stats.due)} label={tr(locale, 'statDebt')} delta={`3 ${tr(locale, 'statOverdueSuffix')}`} down />}
+        {canManage && <StatCard icon={TrendingUp} tone="brick" value={money(stats.due, locale)} label={tr(locale, 'statDebt')} delta={`3 ${tr(locale, 'statOverdueSuffix')}`} down />}
       </div>
 
       <div className="split">
@@ -61,7 +61,7 @@ export function Overview({ stats, students, lessons, leads, setPage, sendReminde
                       </td>
                       <td>
                         <span className={'pill ' + (s.paid ? 'pill-warning' : 'pill-danger')}>
-                          {s.paid ? `${s.attendance}% ${tr(locale, 'attendanceSuffix')}` : `${tr(locale, 'debtPrefix')} ${money(s.fee - s.paidAmount)}`}
+                          {s.paid ? `${s.attendance}% ${tr(locale, 'attendanceSuffix')}` : `${tr(locale, 'debtPrefix')} ${money(s.fee - s.paidAmount, locale)}`}
                         </span>
                       </td>
                       <td style={{ textAlign: 'end' }}>

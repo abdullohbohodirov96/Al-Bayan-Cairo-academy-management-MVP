@@ -47,7 +47,7 @@ function EditForm({ s, branches, onCancel, onSubmit }) {
   );
 }
 
-export function StudentDrawer({ s, onClose, togglePay, sendReminder, canManage = true, branches = [], onUpdateStudent, onDeleteStudent }) {
+export function StudentDrawer({ s, onClose, togglePay, sendReminder, canManage = true, branches = [], onUpdateStudent, onDeleteStudent, locale = 'ru' }) {
   const [editing, setEditing] = useState(false);
   if (!s) return null;
 
@@ -84,13 +84,13 @@ export function StudentDrawer({ s, onClose, togglePay, sendReminder, canManage =
               </div>
               <div className="card" style={{ padding: 14 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5 }}>
-                  <span>Начислено</span><b className="mono">{money(s.fee)}</b>
+                  <span>Начислено</span><b className="mono">{money(s.fee, locale)}</b>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, marginTop: 6 }}>
-                  <span>Оплачено</span><b className="mono">{money(s.paidAmount)}</b>
+                  <span>Оплачено</span><b className="mono">{money(s.paidAmount, locale)}</b>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, marginTop: 6 }}>
-                  <span>Срок</span><b className="mono">{shortDate(s.due)}</b>
+                  <span>Срок</span><b className="mono">{shortDate(s.due, locale)}</b>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, marginTop: 6 }}>
                   <span>Дарслар қолди</span><b className="mono">{Math.max(0, 12 - (s.lessonsUsed || 0))} / 12</b>

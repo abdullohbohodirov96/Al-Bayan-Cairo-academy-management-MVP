@@ -69,7 +69,7 @@ export function Students({ students, query, setModal, setSelected, togglePay, se
                   <td>
                     <div className={'status ' + (s.paid ? 'paid' : 'overdue')}>
                       <b>{s.paid ? tr(locale, 'statusPaid') : s.paidAmount > 0 ? tr(locale, 'statusPartial') : tr(locale, 'statusDue')}</b>
-                      <span>{s.paid ? shortDate(s.due) : money(s.fee - s.paidAmount)}</span>
+                      <span>{s.paid ? shortDate(s.due, locale) : money(s.fee - s.paidAmount, locale)}</span>
                     </div>
                   </td>
                   <td>

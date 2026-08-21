@@ -15,9 +15,9 @@ export function Payments({ students, togglePay, sendReminder, locale = 'ru' }) {
       <PageHead title={tr(locale, 'payments')} sub={tr(locale, 'subPayments')} />
 
       <div className="statgrid">
-        <StatCard icon={WalletCards} value={money(collected)} label="Собрано по выборке" />
-        <StatCard icon={AlertTriangle} tone="brick" value={money(remaining)} label={`Остаток · ${unpaid.length} учеников`} />
-        <StatCard icon={Clock3} tone="brass" value={nextDue ? shortDate(nextDue.due) : '—'} label="Ближайший срок оплаты" />
+        <StatCard icon={WalletCards} value={money(collected, locale)} label="Собрано по выборке" />
+        <StatCard icon={AlertTriangle} tone="brick" value={money(remaining, locale)} label={`Остаток · ${unpaid.length} учеников`} />
+        <StatCard icon={Clock3} tone="brass" value={nextDue ? shortDate(nextDue.due, locale) : '—'} label="Ближайший срок оплаты" />
       </div>
 
       <div className="card">
@@ -42,13 +42,13 @@ export function Payments({ students, togglePay, sendReminder, locale = 'ru' }) {
                       </div>
                     </td>
                     <td>
-                      <b>{shortDate(s.due)}</b><br />
+                      <b>{shortDate(s.due, locale)}</b><br />
                       <span style={{ fontSize: 11.5, color: diff < 0 ? 'var(--brick)' : 'var(--ink-faint)' }}>
                         {diff < 0 ? 'просрочено' : diff === 0 ? 'сегодня' : `через ${diff} дн.`}
                       </span>
                     </td>
-                    <td><b>{money(s.fee)}</b></td>
-                    <td><b>{money(s.paidAmount)}</b></td>
+                    <td><b>{money(s.fee, locale)}</b></td>
+                    <td><b>{money(s.paidAmount, locale)}</b></td>
                     <td>
                       <span className={'pill ' + (Math.max(0, 12 - (s.lessonsUsed || 0)) <= 2 ? 'pill-warning' : 'pill-success')}>
                         {Math.max(0, 12 - (s.lessonsUsed || 0))} дарс қолди
