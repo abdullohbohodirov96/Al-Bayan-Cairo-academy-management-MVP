@@ -205,3 +205,163 @@ export const updateStaffProfile = (user_id, fields) => callManageStaff({ action:
 export const resetStaffPassword = (user_id, password) => callManageStaff({ action: 'reset_password', user_id, password });
 export const setStaffActive = (user_id, is_active) => callManageStaff({ action: 'set_active', user_id, is_active });
 export const deleteStaff = (user_id) => callManageStaff({ action: 'delete', user_id });
+
+// --- Students, payments, attendance ---------------------------------------
+// The `id` the rest of the frontend uses everywhere (search, table rows,
+// URLs-in-spirit) is the human-readable student_code (e.g. "AB-1042"), not
+// the internal UUID — student_code is unique in the DB too, so every
+// read/write below filters by it directly and never exposes the UUID in
+// the UI. We still keep the UUID on each object as `_uuid` for the rare
+// internal calls (attendance, payments) that need a real foreign key.
+
+const STUDENT_SELECT = 'id, student_code, full_name, phone, parent_name, monthly_fee, status, current_level_id, level:levels(code), group:groups(id,name,teacher:teachers(full_name)), branch:branches(name)';
+
+function rowToStudent(row, payment, lessonsUsed, attendancePct) {
+  return {
+    id: row.student_code,
+    _uuid: row.id,
+    _groupId: row.group?.id || null,
+    name: row.full_name,
+    phone: row.phone || '',
+    parent: row.parent_name || '',
+    level: row.level?.code || '',
+    group: row.group?.name || '',
+    teacher: row.group?.teacher?.full_name || '',
+    branch: row.branch?.name || '',
+    fee: Number(row.monthly_fee) || 0,
+    paid: payment?.status === 'paid',
+    paidAmount: Number(payment?.paid_amount) || 0,
+    due: payment?.due_date || null,
+    paidAt: payment?.paid_at ? payment.paid_at.slice(0, 10) : null,
+    attendance: attendancePct,
+    lessonsUsed,
+    avatar: undefined, // computed client-side from name, same as before
+  };
+}
+
+export async function fetchStudents() {
+  if (!supabaseEnabled) return null;
+
+  const { data: students, error } = await supabase.from('students').select(STUDENT_SELECT).order('created_at');
+  if (error) { console.error('fetchStudents failed:', error.message); return null; }
+
+  const { data: payments } = await supabase
+    .from('payments')
+    .select('student_id, status, paid_amount, due_date, paid_at, billing_month')
+    .order('due_date', { ascending: false });
+  const latestPaymentByStudent = new Map();
+  for (const p of payments || []) {
+    if (!latestPaymentByStudent.has(p.student_id)) latestPaymentByStudent.set(p.student_id, p);
+  }
+
+  const { data: attendanceRows } = await supabase.from('attendance').select('student_id, lesson_date, status');
+
+  return students.map(row => {
+    const payment = latestPaymentByStudent.get(row.id);
+    const sinceDate = payment?.paid_at ? payment.paid_at.slice(0, 10) : '2000-01-01';
+    const mine = (attendanceRows || []).filter(a => a.student_id === row.id);
+    const lessonsUsed = mine.filter(a => (a.status === 'present' || a.status === 'late') && a.lesson_date > sinceDate).length;
+    const attended = mine.filter(a => a.status === 'present' || a.status === 'late').length;
+    const attendancePct = mine.length ? Math.round((attended / mine.length) * 100) : 100;
+    return rowToStudent(row, payment, lessonsUsed, attendancePct);
+  });
+}
+
+async function resolveGroupIdByName(name) {
+  if (!name) return null;
+  const { data } = await supabase.from('groups').select('id').eq('name', name).maybeSingle();
+  return data?.id || null;
+}
+async function resolveBranchIdByName(name) {
+  if (!name) return null;
+  const { data } = await supabase.from('branches').select('id').eq('name', name).maybeSingle();
+  return data?.id || null;
+}
+
+export async function insertStudent(code, form) {
+  if (!supabaseEnabled) return null;
+  const [level_id, current_group_id, branch_id] = await Promise.all([
+    resolveId('levels', 'code', form.level),
+    resolveGroupIdByName(form.group),
+    resolveBranchIdByName(form.branch),
+  ]);
+  const payload = {
+    student_code: code,
+    full_name: form.name,
+    phone: form.phone || null,
+    parent_name: form.parent || null,
+    current_level_id: level_id,
+    current_group_id,
+    branch_id,
+    monthly_fee: Number(form.fee) || 0,
+    status: 'active',
+  };
+  const { data, error } = await supabase.from('students').insert(payload).select(STUDENT_SELECT).single();
+  if (error) { console.error('insertStudent failed:', error.message); return null; }
+
+  if (form.due) {
+    const { error: payError } = await supabase.from('payments').insert({
+      student_id: data.id,
+      billing_month: form.due.slice(0, 7) + '-01',
+      due_date: form.due,
+      amount: Number(form.fee) || 0,
+      paid_amount: 0,
+      status: 'pending',
+    });
+    if (payError) console.error('initial payment row failed:', payError.message);
+  }
+  return rowToStudent(data, null, 0, 100);
+}
+
+export async function updateStudentRemote(code, form) {
+  if (!supabaseEnabled) return false;
+  const updates = {};
+  if (form.name !== undefined) updates.full_name = form.name;
+  if (form.phone !== undefined) updates.phone = form.phone;
+  if (form.parent !== undefined) updates.parent_name = form.parent;
+  if (form.fee !== undefined) updates.monthly_fee = Number(form.fee);
+  if (form.level !== undefined) updates.current_level_id = await resolveId('levels', 'code', form.level);
+  if (form.group !== undefined) updates.current_group_id = await resolveGroupIdByName(form.group);
+  if (form.branch !== undefined) updates.branch_id = await resolveBranchIdByName(form.branch);
+
+  const { error } = await supabase.from('students').update(updates).eq('student_code', code);
+  if (error) { console.error('updateStudent failed:', error.message); return false; }
+  return true;
+}
+
+export async function deleteStudentRemote(code) {
+  if (!supabaseEnabled) return false;
+  const { error } = await supabase.from('students').delete().eq('student_code', code);
+  if (error) { console.error('deleteStudent failed:', error.message); return false; }
+  return true;
+}
+
+export async function recordPaymentRemote(studentUuid, paidDate, amount) {
+  if (!supabaseEnabled || !studentUuid) return false;
+  const dueDate = addMonthsIso(paidDate, 1);
+  const { error } = await supabase.from('payments').upsert({
+    student_id: studentUuid,
+    billing_month: paidDate.slice(0, 7) + '-01',
+    due_date: dueDate,
+    amount,
+    paid_amount: amount,
+    status: 'paid',
+    paid_at: paidDate,
+  }, { onConflict: 'student_id,billing_month' });
+  if (error) { console.error('recordPayment failed:', error.message); return false; }
+  return true;
+}
+
+function addMonthsIso(iso, n) {
+  const d = new Date(iso + 'T00:00:00');
+  d.setMonth(d.getMonth() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+export async function markAttendanceRemote(rows) {
+  // rows: [{ student_id, group_id, lesson_date, status, marked_by }]
+  if (!supabaseEnabled || !rows.length) return false;
+  const { error } = await supabase.from('attendance').upsert(rows, { onConflict: 'student_id,lesson_date,group_id' });
+  if (error) { console.error('markAttendance failed:', error.message); return false; }
+  return true;
+}

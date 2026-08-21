@@ -27,7 +27,7 @@ import { isPrefixMatch } from './search.js';
 import { initials, todayISO, addMonths } from './utils.js';
 import { rolePages, roleCanEdit, defaultPageFor } from './roles.js';
 import { supabase, supabaseEnabled } from './supabaseClient.js';
-import { fetchBranches, upsertBranch, deleteBranchRemote, fetchGroups, upsertGroup, fetchTeachers, upsertTeacher, deleteTeacherRemote, fetchLeads, insertLead } from './dataService.js';
+import { fetchBranches, upsertBranch, deleteBranchRemote, fetchGroups, upsertGroup, fetchTeachers, upsertTeacher, deleteTeacherRemote, fetchLeads, insertLead, fetchStudents, insertStudent, updateStudentRemote, deleteStudentRemote, recordPaymentRemote, markAttendanceRemote } from './dataService.js';
 
 const roleLabels = { ceo: 'CEO', admin: 'Админ', teacher: 'Ustoz' };
 
@@ -107,6 +107,8 @@ export default function App() {
       if (remoteGroups && remoteGroups.length) setGroups(remoteGroups);
       const remoteLeads = await fetchLeads();
       if (remoteLeads) setLeads(remoteLeads);
+      const remoteStudents = await fetchStudents();
+      if (remoteStudents) setStudents(remoteStudents.map(s => ({ ...s, avatar: initials(s.name) })));
     }
 
     supabase.auth.getSession().then(({ data }) => loadProfile(data.session?.user));
@@ -140,21 +142,29 @@ export default function App() {
     return { total: students.length, paid, overdue, revenue, due, attendance };
   }, [students]);
 
-  function addStudent(e) {
+  async function addStudent(e) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     const name = String(f.get('name') || '').trim();
+    const code = 'AB-' + String(1100 + students.length);
+    const form = {
+      name, phone: f.get('phone') || '', parent: f.get('parent') || '', level: f.get('level'),
+      fee: f.get('fee'), due: f.get('due'), teacher: f.get('teacher'), group: f.get('group'), branch: f.get('branch'),
+    };
     const s = {
-      id: 'AB-' + String(1100 + students.length), name,
-      phone: f.get('phone') || '', parent: f.get('parent') || '', level: f.get('level'),
-      month: 1, start: todayISO(), fee: Number(f.get('fee')), paid: false, paidAmount: 0,
-      due: f.get('due'), teacher: f.get('teacher'), group: f.get('group'), attendance: 100,
-      status: 'active', avatar: initials(name), branch: f.get('branch'),
+      id: code, name, phone: form.phone, parent: form.parent, level: form.level,
+      fee: Number(form.fee), paid: false, paidAmount: 0,
+      due: form.due, teacher: form.teacher, group: form.group, attendance: 100, lessonsUsed: 0,
+      status: 'active', avatar: initials(name), branch: form.branch,
     };
     setStudents(v => [s, ...v]);
     setModal(null);
     setPrefillGroup(null);
     setToast('Карточка ученика создана');
+    if (supabaseEnabled) {
+      const saved = await insertStudent(code, form);
+      if (saved) setStudents(v => v.map(x => x.id === code ? { ...x, ...saved, avatar: initials(saved.name) } : x));
+    }
   }
 
   function addStudentToGroup(group) {
@@ -171,14 +181,16 @@ export default function App() {
     setAssignModalGroup(null);
   }
 
-  function updateStudent(id, form) {
+  async function updateStudent(id, form) {
     setStudents(v => v.map(s => s.id === id ? { ...s, ...form, fee: form.fee !== undefined ? Number(form.fee) : s.fee } : s));
     setToast('Ўзгаришлар сақланди');
+    if (supabaseEnabled) await updateStudentRemote(id, form);
   }
 
-  function deleteStudent(id) {
+  async function deleteStudent(id) {
     setStudents(v => v.filter(s => s.id !== id));
     setToast('Ўчирилди');
+    if (supabaseEnabled) await deleteStudentRemote(id);
   }
 
   function togglePay(id) {
@@ -193,12 +205,16 @@ export default function App() {
     setPayModalStudent(student);
   }
 
-  function confirmPayment(id, paidDate) {
+  async function confirmPayment(id, paidDate) {
     setStudents(v => v.map(s => s.id === id
       ? { ...s, paid: true, paidAmount: s.fee, status: 'active', paidAt: paidDate, due: addMonths(paidDate, 1), lessonsUsed: 0 }
       : s));
     setPayModalStudent(null);
     setToast('Тўлов қайд этилди, кейинги тўлов санаси автоматик ҳисобланди');
+    if (supabaseEnabled) {
+      const student = students.find(s => s.id === id);
+      if (student?._uuid) await recordPaymentRemote(student._uuid, paidDate, student.fee);
+    }
   }
 
   function sendReminder(student, type = 'Ручное напоминание') {
@@ -284,7 +300,8 @@ export default function App() {
     }
   }
 
-  function saveAttendance(group, marked) {
+  async function saveAttendance(group, marked) {
+    const remoteRows = [];
     setStudents(v => v.map(s => {
       const mark = marked[s.id];
       if (!mark || s.group !== group?.name) return s;
@@ -292,10 +309,17 @@ export default function App() {
       // Present/late count as an attended lesson against the monthly 12,
       // shown as "N dars qoldi" until the next payment resets it.
       const lessonsUsed = (mark === 'present' || mark === 'late') ? (s.lessonsUsed || 0) + 1 : (s.lessonsUsed || 0);
+      if (s._uuid) {
+        remoteRows.push({
+          student_id: s._uuid, group_id: group.id, lesson_date: todayISO(),
+          status: mark, marked_by: account?.id || null,
+        });
+      }
       return { ...s, attendance: Math.max(0, Math.min(100, s.attendance + bump)), lessonsUsed };
     }));
     setToast('Посещаемость сохранена');
     setPage('overview');
+    if (supabaseEnabled && remoteRows.length) await markAttendanceRemote(remoteRows);
   }
 
   function openRecord(item) {

@@ -16,6 +16,7 @@ export function money(v, locale = 'ru') {
   return `${grouped} ${word}`;
 }
 export function shortDate(iso, locale = 'ru') {
+  if (!iso) return '—';
   const d = new Date(iso + 'T00:00:00');
   const months = MONTH_SHORT[locale] || MONTH_SHORT.ru;
   const day = String(d.getDate()).padStart(2, '0');
@@ -23,6 +24,7 @@ export function shortDate(iso, locale = 'ru') {
   return locale === 'en' ? `${month} ${day}` : `${day} ${month}`;
 }
 export function dayDiff(iso, todayIso) {
+  if (!iso) return 0;
   const a = new Date(iso + 'T00:00:00');
   const b = new Date(todayIso + 'T00:00:00');
   return Math.round((a - b) / 86400000);
