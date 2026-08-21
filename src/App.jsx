@@ -349,7 +349,7 @@ export default function App() {
         />
 
         {page === 'overview' && allowedPages.includes('overview') && (
-          <Overview stats={stats} students={scopedStudents} lessons={seedLessons} leads={leads} setPage={setPage} sendReminder={sendReminder} account={account} canManage={canManage} />
+          <Overview stats={stats} students={scopedStudents} lessons={seedLessons} leads={leads} setPage={setPage} sendReminder={sendReminder} account={account} canManage={canManage} locale={locale} />
         )}
         {page === 'students' && allowedPages.includes('students') && (
           <Students students={scopedFiltered} query={query} setModal={setModal} setSelected={setSelected} togglePay={togglePay} sendReminder={sendReminder} canManage={canManage} locale={locale} />

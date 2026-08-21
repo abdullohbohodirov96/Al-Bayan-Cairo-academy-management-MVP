@@ -1,24 +1,27 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Plus, Search, BellRing, WalletCards, ChevronRight } from 'lucide-react';
 import { PageHead, Avatar } from '../components/UI.jsx';
 import { tr } from '../i18n.js';
 import { money, shortDate } from '../utils.js';
 
-const FILTERS = [
-  ['all', 'Все', s => true],
-  ['debt', 'С долгом', s => !s.paid],
-  ['low', 'Посещаемость <85%', s => s.attendance < 85],
-];
-
 export function Students({ students, query, setModal, setSelected, togglePay, sendReminder, canManage = true, locale = 'ru' }) {
   const [filter, setFilter] = useState('all');
+  const [groupFilter, setGroupFilter] = useState('all');
+
+  const FILTERS = [
+    ['all', tr(locale, 'filterAll'), () => true],
+    ['debt', tr(locale, 'filterDebt'), s => !s.paid],
+    ['low', tr(locale, 'filterLow'), s => s.attendance < 85],
+  ];
   const active = FILTERS.find(f => f[0] === filter)[2];
-  const list = students.filter(active);
+
+  const groupNames = useMemo(() => [...new Set(students.map(s => s.group).filter(Boolean))].sort(), [students]);
+  const list = students.filter(active).filter(s => groupFilter === 'all' || s.group === groupFilter);
 
   return (
     <section className="content">
       <PageHead title={tr(locale, 'students')} sub={canManage ? tr(locale, 'subStudentsManage') : tr(locale, 'subStudentsTeacher')}>
-        {canManage && <button className="btn btn-primary" onClick={() => setModal('add')}><Plus size={16} /> Добавить ученика</button>}
+        {canManage && <button className="btn btn-primary" onClick={() => setModal('add')}><Plus size={16} /> {tr(locale, 'addStudentBtn')}</button>}
       </PageHead>
 
       <div className="toolbar">
@@ -28,8 +31,14 @@ export function Students({ students, query, setModal, setSelected, togglePay, se
               {label} <b>{students.filter(fn).length}</b>
             </button>
           ))}
+          {groupNames.length > 0 && (
+            <select className="filter" style={{ paddingInlineEnd: 10 }} value={groupFilter} onChange={e => setGroupFilter(e.target.value)}>
+              <option value="all">{tr(locale, 'allGroups')}</option>
+              {groupNames.map(g => <option key={g} value={g}>{g}</option>)}
+            </select>
+          )}
         </div>
-        {query && <div className="querynote"><Search size={13} /> Префикс поиска: <b>{query}</b></div>}
+        {query && <div className="querynote"><Search size={13} /> {tr(locale, 'searchPrefix')}: <b>{query}</b></div>}
       </div>
 
       <div className="card tablewrap">
@@ -37,7 +46,7 @@ export function Students({ students, query, setModal, setSelected, togglePay, se
           <table>
             <thead>
               <tr>
-                <th>Ученик</th><th>Уровень / группа</th><th>Преподаватель</th><th>Посещаемость</th><th>Оплата</th><th></th>
+                <th>{tr(locale, 'colStudent')}</th><th>{tr(locale, 'colLevelGroup')}</th><th>{tr(locale, 'colTeacher')}</th><th>{tr(locale, 'colAttendance')}</th><th>{tr(locale, 'colPayment')}</th><th></th>
               </tr>
             </thead>
             <tbody>
@@ -59,14 +68,14 @@ export function Students({ students, query, setModal, setSelected, togglePay, se
                   </td>
                   <td>
                     <div className={'status ' + (s.paid ? 'paid' : 'overdue')}>
-                      <b>{s.paid ? 'Оплачено' : s.paidAmount > 0 ? 'Частично' : 'К оплате'}</b>
+                      <b>{s.paid ? tr(locale, 'statusPaid') : s.paidAmount > 0 ? tr(locale, 'statusPartial') : tr(locale, 'statusDue')}</b>
                       <span>{s.paid ? shortDate(s.due) : money(s.fee - s.paidAmount)}</span>
                     </div>
                   </td>
                   <td>
                     <div className="rowactions">
-                      {canManage && <button title="Отправить SMS" onClick={e => { e.stopPropagation(); sendReminder(s); }}><BellRing size={14} /></button>}
-                      {canManage && <button title="Изменить оплату" onClick={e => { e.stopPropagation(); togglePay(s.id); }}><WalletCards size={14} /></button>}
+                      {canManage && <button title={tr(locale, 'sendSms')} onClick={e => { e.stopPropagation(); sendReminder(s); }}><BellRing size={14} /></button>}
+                      {canManage && <button title={tr(locale, 'editPayment')} onClick={e => { e.stopPropagation(); togglePay(s.id); }}><WalletCards size={14} /></button>}
                       <ChevronRight size={15} color="var(--ink-faint)" />
                     </div>
                   </td>
@@ -75,7 +84,7 @@ export function Students({ students, query, setModal, setSelected, togglePay, se
             </tbody>
           </table>
         ) : (
-          <div className="empty"><Search size={22} /><b>Совпадений нет</b><span>Попробуйте другой запрос или фильтр.</span></div>
+          <div className="empty"><Search size={22} /><b>{tr(locale, 'noMatches')}</b><span>{tr(locale, 'tryOther')}</span></div>
         )}
       </div>
     </section>

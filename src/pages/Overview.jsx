@@ -1,43 +1,50 @@
 import { Users, WalletCards, UserCheck, TrendingUp, ArrowUpRight, CalendarDays, BellRing } from 'lucide-react';
 import { StatCard, Avatar, PageHead } from '../components/UI.jsx';
 import { money, shortDate } from '../utils.js';
+import { tr } from '../i18n.js';
 
-export function Overview({ stats, students, lessons, leads, setPage, sendReminder, account, canManage = true }) {
+function fill(template, vars) {
+  return Object.entries(vars).reduce((s, [k, v]) => s.replaceAll(`{${k}}`, v), template);
+}
+
+export function Overview({ stats, students, lessons, leads, setPage, sendReminder, account, canManage = true, locale = 'ru' }) {
   const attention = students.filter(s => !s.paid || s.attendance < 85).slice(0, 5);
   const today = lessons.filter(l => l.date === '2026-08-19');
   const freshLeads = leads.filter(l => l.stage === 'new' || l.stage === 'contacted').slice(0, 4);
   const firstName = account?.name.split(' ')[0] || '';
 
+  const summary = fill(tr(locale, canManage ? 'heroManage' : 'heroTeacher'), {
+    total: canManage ? stats.total : students.length,
+    attendance: stats.attendance,
+    due: money(stats.due),
+  });
+
   return (
     <section className="content">
       <div className="overview-hero">
         <div>
-          <h2>Ассаламу алайкум, {firstName}</h2>
-          <p>
-            {canManage
-              ? `${stats.total} учеников, ${stats.attendance}% средняя посещаемость, ${money(stats.due)} к сбору на сегодня.`
-              : `${students.length} учеников в ваших группах, ${stats.attendance}% средняя посещаемость.`}
-          </p>
+          <h2>{tr(locale, 'heroGreeting')}, {firstName}</h2>
+          <p>{summary}</p>
         </div>
         <div className="datebadge"><CalendarDays size={15} /> 19 августа 2026 · Cairo Main</div>
       </div>
 
       <div className="statgrid">
-        <StatCard icon={Users} value={students.length} label={canManage ? 'Активных учеников' : 'Учеников в группах'} delta={canManage ? '+4 за месяц' : undefined} />
-        {canManage && <StatCard icon={WalletCards} tone="brass" value={money(stats.revenue)} label="Доход за месяц" delta="+8.2%" />}
-        <StatCard icon={UserCheck} value={stats.attendance + '%'} label="Средняя посещаемость" />
-        {canManage && <StatCard icon={TrendingUp} tone="brick" value={money(stats.due)} label="Дебиторская задолженность" delta="3 просрочки" down />}
+        <StatCard icon={Users} value={students.length} label={tr(locale, canManage ? 'statActiveStudents' : 'statStudentsInGroups')} delta={canManage ? tr(locale, 'statMonthlyGrowth') : undefined} />
+        {canManage && <StatCard icon={WalletCards} tone="brass" value={money(stats.revenue)} label={tr(locale, 'statMonthlyRevenue')} delta="+8.2%" />}
+        <StatCard icon={UserCheck} value={stats.attendance + '%'} label={tr(locale, 'statAvgAttendance')} />
+        {canManage && <StatCard icon={TrendingUp} tone="brick" value={money(stats.due)} label={tr(locale, 'statDebt')} delta={`3 ${tr(locale, 'statOverdueSuffix')}`} down />}
       </div>
 
       <div className="split">
         <div className="card">
           <div className="cardhead">
             <div>
-              <h3>Требуют внимания</h3>
-              <p>Просрочка оплаты или посещаемость ниже 85%</p>
+              <h3>{tr(locale, 'attentionTitle')}</h3>
+              <p>{tr(locale, 'attentionSub')}</p>
             </div>
             <button className="btn btn-ghost btn-sm" onClick={() => setPage('students')}>
-              Открыть CRM <ArrowUpRight size={14} />
+              {tr(locale, 'openCrm')} <ArrowUpRight size={14} />
             </button>
           </div>
           <div className="tablewrap">
@@ -54,7 +61,7 @@ export function Overview({ stats, students, lessons, leads, setPage, sendReminde
                       </td>
                       <td>
                         <span className={'pill ' + (s.paid ? 'pill-warning' : 'pill-danger')}>
-                          {s.paid ? `${s.attendance}% посещ.` : 'Долг ' + money(s.fee - s.paidAmount)}
+                          {s.paid ? `${s.attendance}% ${tr(locale, 'attendanceSuffix')}` : `${tr(locale, 'debtPrefix')} ${money(s.fee - s.paidAmount)}`}
                         </span>
                       </td>
                       <td style={{ textAlign: 'end' }}>
@@ -69,7 +76,7 @@ export function Overview({ stats, students, lessons, leads, setPage, sendReminde
                 </tbody>
               </table>
             ) : (
-              <div className="empty"><b>Все в порядке</b><span>Нет должников и отстающих по посещаемости.</span></div>
+              <div className="empty"><b>{tr(locale, 'allGood')}</b><span>{tr(locale, 'noDebtorsSub')}</span></div>
             )}
           </div>
         </div>
@@ -77,14 +84,14 @@ export function Overview({ stats, students, lessons, leads, setPage, sendReminde
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div className="card">
             <div className="cardhead">
-              <div><h3>Сегодня</h3><p>{today.length} занятия по расписанию</p></div>
+              <div><h3>{tr(locale, 'todayTitle')}</h3><p>{fill(tr(locale, 'lessonsScheduled'), { n: today.length })}</p></div>
             </div>
             {today.map(l => (
               <div className="glance-row" key={l.id}>
                 <span className="time mono">{l.time}</span>
                 <span style={{ flex: 1 }}>{l.group}</span>
                 <span className={'pill ' + (l.status === 'done' ? 'pill-success' : l.status === 'active' ? 'pill-warning' : 'pill-neutral')}>
-                  {l.status === 'done' ? 'Завершён' : l.status === 'active' ? 'Идёт' : 'Скоро'}
+                  {l.status === 'done' ? tr(locale, 'statusDone') : l.status === 'active' ? tr(locale, 'statusActive') : tr(locale, 'statusSoon')}
                 </span>
               </div>
             ))}
@@ -92,8 +99,8 @@ export function Overview({ stats, students, lessons, leads, setPage, sendReminde
           {canManage && (
             <div className="card">
               <div className="cardhead">
-                <div><h3>Новые лиды</h3><p>Ждут первого контакта</p></div>
-                <button className="btn btn-ghost btn-sm" onClick={() => setPage('leads')}>Все <ArrowUpRight size={14} /></button>
+                <div><h3>{tr(locale, 'newLeadsTitle')}</h3><p>{tr(locale, 'newLeadsSub')}</p></div>
+                <button className="btn btn-ghost btn-sm" onClick={() => setPage('leads')}>{tr(locale, 'allBtn')} <ArrowUpRight size={14} /></button>
               </div>
               {freshLeads.map(l => (
                 <div className="glance-row" key={l.id}>
